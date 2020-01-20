@@ -1,4 +1,6 @@
 from bs4 import BeautifulSoup, UnicodeDammit
+from scraper import parser_helper
+import re
 
 
 class parse_answers(object):
@@ -20,9 +22,9 @@ class parse_answers(object):
                 
                 # Parsing values
                 userName    = self._parse_user(row)
-                
+                print(userName)
                 # We are skipping comments by the original poster:
-                if userName == "A kérdező kommentje:":
+                if userName == "A kérdező kommentje:" or userName == "A kÃ©rdezÅ‘ kommentje:":
                     continue
 
                 answer_id   = self._parse_answer_id(row)
@@ -35,7 +37,7 @@ class parse_answers(object):
                 self.answer_data.append({
                     'GYIK_ID' : answer_id,
                     'USER' : {'USER' : userName, 'USER_PERCENT' : user_percent},
-                    'ANSWER_DATE' : raw_date,
+                    'ANSWER_DATE' : parser_helper.process_date(raw_date),
                     'ANSWER_TEXT' : answer_text,
                     'USER_PERCENT' : user_percent,
                     'ANSWER_PERCENT' : answer_percent
@@ -58,14 +60,18 @@ class parse_answers(object):
             a_text = ' '.join([x.text for x in p])
         else:
             td = row.findChildren('td')[1]
-            a_text = td.find(text=True, recursive=False)
+            a_text_array = td.findAll(text=True, recursive=False)
+            a_text = ' '.join(a_text_array)
             a_text = a_text.replace('\n', ' ')
 
         return a_text
 
     def _parse_usefulness(self, row):
         u = row.findChild('div', class_ = 'right small')
-        u_text = u.text
+        try:
+            u_text = u.text
+        except:
+            print(row)
 
         # Try to fetch usefullness of answer:
         m_a = re.search('lasz (.+?)%', u_text)
@@ -100,3 +106,4 @@ class parse_answers(object):
     
     def get_answer_data(self):
         return(self.answer_data)
+  

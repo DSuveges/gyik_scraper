@@ -22,7 +22,7 @@ def download_page(URL):
     uhtml = UnicodeDammit(html)
 
     # Creating soup:
-    soup = BeautifulSoup(uhtml.unicode_markup)
+    soup = BeautifulSoup(uhtml.unicode_markup, features="html.parser")
     
     # check if the returned value contain the html.
     return soup

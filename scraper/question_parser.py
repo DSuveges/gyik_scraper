@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup, UnicodeDammit
-import re
+from scraper import parser_helper
 
+import re
 
 class parse_question(object):
     
@@ -17,9 +18,8 @@ class parse_question(object):
         raw_date = self._parse_date()
         user = self._parse_user()
         text = self._parse_text()
-        ID_match = re.search('{}__(.+?)-'.format(categories[1]), question_URL)
-        
-        
+        ID_match = re.search('__(\d+?)-', question_URL)
+                
         # Compile into some return value:
         self.question_data = {
             'URL' : question_URL,
@@ -28,9 +28,9 @@ class parse_question(object):
             'CATEGORY' : categories[0],
             'SUBCATEGORY' : categories[1],
             'QUESTION' : text,
-            'QUESTION_DATE' : raw_date,
+            'QUESTION_DATE' : parser_helper.process_date(raw_date),
             'KEYWORDS' : keywords,
-            'USER' : user
+            'USER' : {'USER' : user, 'USER_PERCENT' : None}
         }
         
     def _parse_title(self):
@@ -82,7 +82,5 @@ class parse_question(object):
 
     def get_question_data(self):
         return self.question_data
-    
-
     
     

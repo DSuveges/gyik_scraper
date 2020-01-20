@@ -1,3 +1,7 @@
+import sqlite3
+import datetime
+import pickle
+
 class db_connection(object):
 
     # The table in which the potential keywords are stored for a question:
@@ -10,7 +14,7 @@ class db_connection(object):
     user_table_sql = """CREATE TABLE IF NOT EXISTS USER (
         ID INTEGER PRIMARY KEY,
         USER TEXT NOT NULL,
-        USER_PERCENT NUMERIC NOT NULL
+        USER_PERCENT NUMERIC
     )"""
 
     # Table in which we store question data:
@@ -19,8 +23,10 @@ class db_connection(object):
         GYIK_ID INTEGER NOT NULL,
         CATEGORY TEXT NOT NULL,
         SUBCATEGORY TEXT NOT NULL,
-        QUESTION TEXT NOT NULL,
+        QUESTION_TITLE TEXT NOT NULL,
+        QUESTION TEXT,
         QUESTION_DATE DATETIME NOT NULL,
+        URL TEXT NOT NULL,
         USER_ID INTEGER,
         FOREIGN KEY (USER_ID) REFERENCES USER (ID) 
     )"""
@@ -29,6 +35,7 @@ class db_connection(object):
     answer_table_sql = """CREATE TABLE IF NOT EXISTS ANSWER (
         ID INTEGER PRIMARY KEY,
         USER_ID INTEGER,
+        GYIK_ID INTEGER NOT NULL, 
         QUESTION_ID INTEGER NOT NULL,
         ANSWER_DATE DATETIME NOT NULL,
         ANSWER_TEXT TEXT NOT NULL,
@@ -40,9 +47,9 @@ class db_connection(object):
 
     # Linking table making connection between questions and keywords:
     question_keyword_table_sql = """CREATE TABLE IF NOT EXISTS QUESTION_KEYWORD (
-        USER_ID INTEGER NOT NULL,
+        KEYWORD_ID INTEGER NOT NULL,
         QUESTION_ID INTEGER NOT NULL,
-        FOREIGN KEY (USER_ID) REFERENCES USER (ID),
+        FOREIGN KEY (KEYWORD_ID) REFERENCES KEYWORD (ID),
         FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)    
     )"""
     
@@ -90,5 +97,4 @@ class db_connection(object):
                 self._create_table(sql_statement)
         else:
             print("Error! cannot create the database connection.")
-
 
