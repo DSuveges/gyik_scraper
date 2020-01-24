@@ -28,6 +28,7 @@ class db_connection(object):
         QUESTION_DATE DATETIME NOT NULL,
         URL TEXT NOT NULL,
         USER_ID INTEGER,
+        ADDED_DATE DATETIME NOT NULL,
         FOREIGN KEY (USER_ID) REFERENCES USER (ID) 
     )"""
 

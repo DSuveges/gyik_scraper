@@ -22,13 +22,14 @@ class parse_answers(object):
                 
                 # Parsing values
                 userName    = self._parse_user(row)
-                print(userName)
-                # We are skipping comments by the original poster:
-                if userName == "A kérdező kommentje:" or userName == "A kÃ©rdezÅ‘ kommentje:":
-                    continue
-
                 answer_id   = self._parse_answer_id(row)
-                (user_percent, answer_percent) = self._parse_usefulness(row)
+
+                # If the original poster submits a comment we don't expect percents:
+                if userName == 'kerdezo_dummy_user':
+                    (user_percent, answer_percent) = (None, None)
+                else:
+                    (user_percent, answer_percent) = self._parse_usefulness(row)
+
                 raw_date    = self._parse_date(all_answers[index + 1])
                 answer_text = self._parse_text(row)
                 userName    = self._parse_user(row)
@@ -53,6 +54,7 @@ class parse_answers(object):
         a_id = a_tag[0].get('id').replace('valasz-','')
         return a_id
 
+
     def _parse_text(self, row):
         p = row.findChildren('p')
 
@@ -64,14 +66,22 @@ class parse_answers(object):
             a_text = ' '.join(a_text_array)
             a_text = a_text.replace('\n', ' ')
 
+        if a_text.strip() == '':
+            a_text_array = row.findChildren('td')[1].findAll(text=True)
+            a_text_array = a_text_array[2:]
+            a_text = ' '.join([x for x in a_text_array if not re.match('.+hasznos.+',x)])            
+            a_text = a_text.replace('\n', ' ')
+
         return a_text
+
 
     def _parse_usefulness(self, row):
         u = row.findChild('div', class_ = 'right small')
         try:
             u_text = u.text
         except:
-            print(row)
+            print('[Warning] Usefulness of the answer could not be retrieved.')
+            return(None, None)
 
         # Try to fetch usefullness of answer:
         m_a = re.search('lasz (.+?)%', u_text)
@@ -91,9 +101,11 @@ class parse_answers(object):
 
         return (u_u, a_u)
 
+
     def _parse_date(self, row):
         date_text = row.findChild('td', class_ = 'datum').text
         return date_text
+
 
     def _parse_user(self,row):
         user = row.findChild('span', class_ = 'sc0')
@@ -102,8 +114,13 @@ class parse_answers(object):
         else:
             user_name = None
 
+        # Assigning dummy user name for the original poster:
+        if user_name == 'A kérdező kommentje:':
+            user_name = 'kerdezo_dummy_user'
+
         return(user_name)
-    
+ 
+
     def get_answer_data(self):
         return(self.answer_data)
-  
+ 

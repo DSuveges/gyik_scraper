@@ -1,5 +1,5 @@
 import sqlite3
-
+from datetime import datetime
 
 
 class data_loader(object):
@@ -46,10 +46,10 @@ class data_loader(object):
     add_question_sql = '''INSERT INTO QUESTION(
                 GYIK_ID, CATEGORY, SUBCATEGORY, 
                 QUESTION_TITLE, QUESTION, 
-                QUESTION_DATE, URL, USER_ID)
+                QUESTION_DATE, URL, USER_ID, ADDED_DATE)
         VALUES(:gyik_id, :category, :subcategory, 
             :question_title, :question,
-            :question_date, :url, :user_id)'''
+            :question_date, :url, :user_id, :added_date)'''
     
     # Look up an answer in the database based on the gyik id:
     get_answer_sql = '''SELECT * FROM ANSWER WHERE GYIK_ID = :gyik_id'''
@@ -160,7 +160,8 @@ class data_loader(object):
                 'question' : question_data['QUESTION'],
                 'question_date' : question_data['QUESTION_DATE'],
                 'url' : question_data['URL'],
-                'user_id' : question_data['USER_ID']}
+                'user_id' : question_data['USER_ID'],
+                'added_date' : datetime.now()}
         self.cursor.execute(self.add_question_sql, d)
         
         return self.cursor.lastrowid
