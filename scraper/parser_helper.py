@@ -1,6 +1,40 @@
 from bs4 import BeautifulSoup, UnicodeDammit
 import datetime
+import re
 
+def get_all_questions(soup):
+    """
+    This function retrieves all question URLs on one list page.
+    Args:
+        soup (bs4): beautifulsoup boject.
+    Returns:
+        question_urls (list): all the links to questions.
+    """
+    questions_list = soup.findChildren('table', class_ = 'kerdes_lista')
+    questions = []
+    flat_questions = [item for sublist in questions_list for item in sublist]
+    for td in flat_questions:
+        try:
+            for a in td.find_all('a'):
+                url = a.get('href')
+                if re.match('.+__\d+-.+', url): questions.append('https://www.gyakorikerdesek.hu' + url)
+        except:
+            continue 
+    return questions
+
+def get_last_question_page(soup):
+    """
+    This function returns the last page of question 
+    in a category
+    """
+    full_table = soup.findChild('td', class_ = 'kismenu_main')
+    table_footer = full_table.findChildren('div', class_='center')[1]
+    URLs = [a_tag.get('href') for a_tag in table_footer.findAll('a') ]
+    if len(URLs) == 0:
+        print('[Warning] Failed to retrieve last page.')
+        return None
+    last_page = URLs[-1].split('-')[-1]
+    return last_page
 
 def get_last_page(soup):
     footer = soup.findChild('td', class_ = 'valaszok')

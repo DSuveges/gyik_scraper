@@ -20,46 +20,70 @@ class scraper(object):
             if self.test_question(match[1]): continue
             rq = question_retriever.retrieve_question(URL)
             data = rq.get_data()
-            # Add data to db
             self.ql.add_question(data)
     def test_question(self,GYIK_ID):
         return self.ad_obj.test_question(GYIK_ID)
 
-# def get_last_page(soup):
-
-
-def get_all_questions(URL):
-    soup = download_page.download_page(URL)
-    questions_list = soup.findChildren('table', class_ = 'kerdes_lista')
-    questions = []
-    flat_questions = [item for sublist in questions_list for item in sublist]
-    for td in flat_questions:
-        try:
-            for a in td.find_all('a'):
-                url = a.get('href')
-                if re.match('.+__\d+-.+', url): questions.append('https://www.gyakorikerdesek.hu' + url)
-        except:
-            continue 
-    return questions
 
 
 def __main__():
-    ## Initially these variables are hardcoded:
+    """
+    The main function of the GYIK scraper application.
+    User can specify the category, start page, end page and the database file into which
+    the data is saved.
+    """
+
+    # Core URL:
     URL = 'https://www.gyakorikerdesek.hu'
-    category = 'tudomanyok'
-    database_file = '/Users/dsuveges/project/GyIK/GYIK_database.db'
 
-    ### Open database, create connection, initialize loader object:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--category', type=str, help='Main category. Mandatory', required = True)
+    parser.add_argument('--startpage', type=int, help='Start page of the question list', required = False, default = 0)
+    parser.add_argument('--endpage', type=int, help='end page of the question list.', required = False)
+    parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
+    args = parser.parse_args()
+
+    database_file = args.database
+    category = args.category
+    startpage = args.startpage
+
+    # If the end page is not defined, we fetch the last page from the page list:
+    if not args.endpage:
+        print('[Info] End page is not defined. Fetching last page of the category ({}).'.format(category))
+        soup = download_page.download_page('{}/{}'.format(URL,category))
+
+        # There's an attribute error if the category is not properly typed:
+        try:
+            endpage = parser_helper.get_last_question_page(soup)
+        except AttributeError:
+            print('[Error] Cound not find page for category: {}'.format(category))
+            raise
+    else:
+        endpage = args.endpage
+
+    # Test if the endpage is higher:
+    if int(startpage) >= int(endpage):
+        print('[Error] The endpage ({}) must be lower than end page ({})'.format(startpage, endpage))
+        raise ValueError
+
+    print('[Info] Category: {}'.format(category))
+    print('[Info] First page of questions: {}'.format(startpage))
+    print('[Info] Last page of questions: {}'.format(endpage))
+
+    ## Open database, create connection, initialize loader object:
     db_obj = db_connection.db_connection(database_file) # DB connection
-
-    # Get last page:
     scraper_o = scraper(db_obj)
 
-
-    for page in range(500,505):
+    for page in range(startpage,endpage):
         # Fetch download page:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, category, page)
-        questions = get_all_questions(question_list_page_url)
+        print(question_list_page_url)
+        soup = download_page.download_page(question_list_page_url)
+
+        # Get question URLs:
+        questions = parser_helper.get_all_questions(soup)
+        
+        # Retrieve all question data:
         scraper_o.get_all_questions(questions)
 
 

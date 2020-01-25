@@ -26,7 +26,6 @@ class retrieve_question(object):
 
         if last_page:
             for page_URL in ['{}__oldal-{}'.format(URL,x) for x in range(1,last_page+1)]:
-                print('.', sep='')
                 soup = download_page.download_page(page_URL)
                 pa = answer_parser.parse_answers(soup)
 
