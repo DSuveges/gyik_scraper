@@ -6,8 +6,13 @@ import re
 class parse_answers(object):
     
     def __init__(self,soup):
+        """
+        This class parses all answer related data. 
+
+        :param soup: BeautifulSoup object 
+        """
+
         self.soup = soup
-        
         self.answer_data = []
         
         # extracting answer table:
@@ -76,30 +81,30 @@ class parse_answers(object):
 
 
     def _parse_usefulness(self, row):
-        u = row.findChild('div', class_ = 'right small')
+        usefullness = row.findChild('div', class_ = 'right small')
         try:
-            u_text = u.text
+            usefullness_text = usefullness.text
         except:
-            print('[Warning] Usefulness of the answer could not be retrieved.')
+            # This happens for answers with no usefulness available for users and answers
             return(None, None)
 
         # Try to fetch usefullness of answer:
-        m_a = re.search('lasz (.+?)%', u_text)
+        match_answer = re.search('lasz (.+?)%', usefullness_text)
 
-        if m_a:
-            a_u = m_a.group(1)
+        if match_answer:
+            answer_usefullness = match_answer.group(1)
         else:
-            a_u = None
+            answer_usefullness = None
 
         # Try to fetch usefullness of user:
-        m_u = re.search('szíró (.+?)%', u_text)
+        match_user = re.search('szíró (.+?)%', usefullness_text)
 
-        if m_u:
-            u_u = m_u.group(1)
+        if match_user:
+            user_usefullness = match_user.group(1)
         else:
-            u_u = None    
+            user_usefullness = None    
 
-        return (u_u, a_u)
+        return (user_usefullness, answer_usefullness)
 
 
     def _parse_date(self, row):

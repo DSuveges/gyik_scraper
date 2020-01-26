@@ -1,8 +1,11 @@
 import sqlite3
-import datetime
-import pickle
+import os.path
 
 class db_connection(object):
+    """
+    This class establishes the connection with the database. It also has the table definitions.
+    If the requested db file does not exist, creates the database with the proper tables.
+    """
 
     # The table in which the potential keywords are stored for a question:
     keyword_table_sql = """CREATE TABLE IF NOT EXISTS KEYWORD (
@@ -56,6 +59,10 @@ class db_connection(object):
     
     
     def __init__(self, filename):
+        # Check if file exists:
+        if os.path.isfile(filename):
+            print ("[Info] {} could not be opened. DB is being created.".format(filename))
+
         # Create connection:
         self._create_connection(filename)
         
@@ -72,9 +79,10 @@ class db_connection(object):
         try:
             self.conn = sqlite3.connect(db_file)
         except Error as e:
-            print(e)
-            self.conn = None
+            print("[Error] DB could not be connected ({}). Exing".format(db_file))
+            raise 
     
+
     def _create_table(self, create_table_sql):
         """ create a table from the create_table_sql statement
         :param conn: Connection object
@@ -85,17 +93,15 @@ class db_connection(object):
             c = self.conn.cursor()
             c.execute(create_table_sql)
         except Error as e:
-            print(e)
+            print('[Error] Table could not be connected.')
+            raise
+            
             
     def _create_all_tables(self):
         tables_to_create = ['keyword','user','question','answer','question_keyword']
         
         # create all tables
-        if self.conn is not None:
-            for table in tables_to_create:
-                print('[Info] Creating {}'.format(table))
-                sql_statement = getattr(self, table+'_table_sql')
-                self._create_table(sql_statement)
-        else:
-            print("Error! cannot create the database connection.")
+        for table in tables_to_create:
+            sql_statement = getattr(self, table+'_table_sql')
+            self._create_table(sql_statement)
 

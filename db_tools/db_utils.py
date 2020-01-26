@@ -2,24 +2,21 @@ import sqlite3
 from datetime import datetime
 
 
-class data_loader(object):
-
+class db_handler(object):
     """
-    This section we collect the sql queries to fetch data, update data or insert data
-    into the database
+    This class defines the modules to add data directly to the database. 
+    Contains all the SQL statements as well.
     """
 
 
     # Add new user to table:
     add_user_sql = '''INSERT INTO USER(USER, USER_PERCENT)
-                    VALUES(:user, :user_percent)
-                '''
+                    VALUES(:user, :user_percent)'''
 
     # Update percent of an existing user:
     update_percent_sql = '''UPDATE USER
                     SET USER_PERCENT = :user_percent
-                    WHERE USER = :user
-                '''
+                    WHERE USER = :user'''
 
     # Retrieve user based on username:
     get_user_sql = '''SELECT * FROM USER WHERE USER = :user'''
@@ -64,6 +61,10 @@ class data_loader(object):
             :user_percent, :answer_percent)'''
 
     def __init__(self, connection):
+        """
+        To initialize the db handler object, 
+        """
+
         if not isinstance(connection, sqlite3.Connection):
             raise TypeError ("Connection object is expected for initialize add_data object.")
 
@@ -71,8 +72,14 @@ class data_loader(object):
         self.cursor = connection.cursor()
 
     def link_to_keyword(self, question_id, keyword_id):
-        # Test if link exists:
+        """
+        Linking question to keyword
+        """
+
+        # Does the link exists?
         self.cursor.execute(self.get_link_sql, {'question_id' : question_id, 'keyword_id' : keyword_id})
+        
+        # Add link if not yet in the database:
         if not self.cursor.fetchone():  
             self.cursor.execute(self.link_to_keyword_sql, {'question_id' : question_id, 'keyword_id' : keyword_id})
         else:
@@ -105,6 +112,11 @@ class data_loader(object):
         return ID
 
     def add_keyword(self, keyword):
+        """
+        Testing if keyword exists. If no, adds to database.
+        Returns keyword ID.
+        """
+
         # None values cannot be added:
         if not keyword:
             print('[Error] keyword must exists.')
@@ -127,6 +139,10 @@ class data_loader(object):
         return ID
 
     def test_question(self, gyik_id):
+        """
+        Based on gyik ID of the question, we tests if it is already in the database: 
+        """
+
         # Fetch data from db:
         self.cursor.execute(self.question_lookup_sql, {'gyik_id' : gyik_id})
 
@@ -137,7 +153,11 @@ class data_loader(object):
             return 0
 
     def add_question(self, question_data):
-        # Test input data:
+        """
+        This methods adds a new row to the question data        
+        """
+
+        # Test if data is in a proper type:
         if not isinstance(question_data, dict):
             raise TypeError ('Question data must be a dictionary')
             
@@ -161,12 +181,17 @@ class data_loader(object):
                 'question_date' : question_data['QUESTION_DATE'],
                 'url' : question_data['URL'],
                 'user_id' : question_data['USER_ID'],
-                'added_date' : datetime.now()}
+                'added_date' : datetime.now()
+            }
         self.cursor.execute(self.add_question_sql, d)
         
         return self.cursor.lastrowid
     
     def test_answer(self, gyik_id):
+        """
+        Test if the gyik ID of the answer exist
+        """
+
         # Fetch data from db:
         self.cursor.execute(self.get_answer_sql, {'gyik_id' : gyik_id})
 
@@ -177,6 +202,10 @@ class data_loader(object):
             return 0 
 
     def add_answer(self, answer_data):
+        """
+        This methods adds a new row to the question data        
+        """
+
         # Test input data:
         if not isinstance(answer_data, dict):
             raise TypeError ('Answer data must be a dictionary')
@@ -199,7 +228,8 @@ class data_loader(object):
                 'user_percent' : answer_data['USER_PERCENT'],
                 'answer_percent' : answer_data['ANSWER_PERCENT'],
                 'question_id' : answer_data['QUESTION_ID'],
-                'user_id' : answer_data['USER_ID']}
+                'user_id' : answer_data['USER_ID']
+            }
         self.cursor.execute(self.add_answer_sql, d)
         
         return self.cursor.lastrowid
@@ -215,18 +245,30 @@ class data_loader(object):
 
 class question_loader(object):
     """
-    This class loads data of a full question into the database
+    This class loads data of a full question (question, keywords, answers etc) into the database.
+
+    There is a very specific order in which the data can be loaded into the database.
     """
     
-    def __init__(self,db_object):
+    def __init__(self,db_handler):
+        """
+        Initialize object with db_handler. When data is subsequently added, this handler 
+        is going to be called.
+        """
         
-        # Storing db_object:
-        self.db_obj = db_object
+        # Storing db_handler:
+        self.db_obj = db_handler
         
     def add_question(self,question_data):
+        """
+        Once all components of the question is parsed and the proper data structure built,
+        we upload the data.
+        """
+
         # 1. Adding user
         user_data = question_data['USER']
         
+        # Nickname of the person who asked the question is often not available. If yes, we add to the db.
         if not question_data['USER']['USER']:
             question_data['USER_ID'] = None
         else:
@@ -236,14 +278,16 @@ class question_loader(object):
         # 2. Add question
         question_id = self.db_obj.add_question(question_data)
         
-        # If question is added, return"
+        # If question is already in the database, return
         if not question_id:
             return 
         
         # Loop through all keywords:
         for keyword in question_data['KEYWORDS']:
+            
             # 3. Add keywords
             keyword_id = self.db_obj.add_keyword(keyword)
+            
             # 4. Add links to keywords
             self.db_obj.link_to_keyword(question_id,keyword_id)
             
@@ -259,5 +303,6 @@ class question_loader(object):
                 
             # 5. Add answers
             self.db_obj.add_answer(answer)
-            
+        
+        # The changes are only committed after all uploads were successfully completed.
         self.db_obj.commit()

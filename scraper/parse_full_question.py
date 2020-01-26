@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup, UnicodeDammit
+# from bs4 import BeautifulSoup, UnicodeDammit
 from scraper import download_page
 from scraper import question_parser
 from scraper import answer_parser
@@ -21,8 +21,8 @@ class retrieve_question(object):
         if pa.get_answer_data():
             question_document['ANSWERS'] += pa.get_answer_data()
 
-        # Get last page:
-        last_page = parser_helper.get_last_page(soup)
+        # Get last page of the answer:
+        last_page = parser_helper.get_last_answer_page(soup)
 
         if last_page:
             for page_URL in ['{}__oldal-{}'.format(URL,x) for x in range(1,last_page+1)]:

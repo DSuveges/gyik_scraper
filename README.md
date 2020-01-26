@@ -22,6 +22,10 @@ python gyik_scraper.py --database <str> \
 
 The start page has to be lower then last page. To retrieve all questions for a category these paremeters needs to be omitted.
 
+### SQLite schema
+
+![db schema](db_tools/schema.png)
+
 ## TODO
 
 * Clean up the code: the naming of the functions are not intuitive.

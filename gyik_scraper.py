@@ -1,29 +1,65 @@
 from scraper import download_page
-from scraper import question_retriever
+from scraper import parse_full_question
 from scraper import parser_helper
 
 from db_tools import db_connection
-from db_tools import add_data
+from db_tools import db_utils
 
 import argparse
 import re
 
 
 class scraper(object):
+    """
+    This class orcestrates all three stages of the parser:
+    1. fetching html from website.
+    2. parse relevant information.
+    3. Upload data to database.
+    """
+
     def __init__(self, db_obj):
-        self.ad_obj = add_data.data_loader(db_obj.conn) # 
-        self.ql = add_data.question_loader(self.ad_obj) # Question loader
-    
+        """
+        Initializing by providing the database object.
+        With the database object, a loader object is initialized.
+        """
+        self.ad_obj = db_utils.db_handler(db_obj.conn) # 
+        self.ql = db_utils.question_loader(self.ad_obj) # Question loader
+
+
     def get_all_questions(self, URL_list):
+        """
+        This method walks through a list of URLs pointing to question 
+        and parse data and add to databasel
+        """
+
+        # Test input:
+        if not isinstance(URL_list, list):
+            print('[Error] scraper.get_all_questions requires a list input. {} is given.'.format(type(URL_list)))
+            print('[Error] Input data:\n')
+            print(URL_list)
+            raise TypeError
+
+        # Looping through URLs:
         for URL in URL_list:
+
+            # Testing if question is loaded into the database:
             match = re.search('__(\d+)-',URL)
             if self.test_question(match[1]): continue
-            rq = question_retriever.retrieve_question(URL)
-            data = rq.get_data()
-            self.ql.add_question(data)
-    def test_question(self,GYIK_ID):
-        return self.ad_obj.test_question(GYIK_ID)
 
+            # Fetching question based on question URL:
+            rq = parse_full_question.retrieve_question(URL)
+            data = rq.get_data()
+
+            # Load data:
+            self.ql.add_question(data)
+
+
+    def test_question(self,GYIK_ID):
+        """
+        Testing if a questin is already loaded into the database or not.
+        return: bool
+        """
+        return self.ad_obj.test_question(GYIK_ID)
 
 
 def __main__():
@@ -40,6 +76,7 @@ def __main__():
     parser.add_argument('--category', type=str, help='Main category. Mandatory', required = True)
     parser.add_argument('--startpage', type=int, help='Start page of the question list', required = False, default = 0)
     parser.add_argument('--endpage', type=int, help='end page of the question list.', required = False)
+    parser.add_argument('--directQuestion', type = str, help ='direct link to scrape to a specific question', required = False)
     parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
     args = parser.parse_args()
 
@@ -74,13 +111,23 @@ def __main__():
     db_obj = db_connection.db_connection(database_file) # DB connection
     scraper_o = scraper(db_obj)
 
+
+    # Only one page is parsed if direct question is passed:
+    if args.directQuestion:
+        scraper_o.get_all_questions([args.directQuestion])
+        quit()
+
+
+    print('[Info] Fetching data from page..', end ="")
+    # Looping through all defined pages:
     for page in range(startpage,endpage):
-        # Fetch download page:
+        print(".", end ="")
+
+        # Fetch page with questions:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, category, page)
-        print(question_list_page_url)
         soup = download_page.download_page(question_list_page_url)
 
-        # Get question URLs:
+        # Get URLs for all questions:
         questions = parser_helper.get_all_questions(soup)
         
         # Retrieve all question data:
@@ -89,3 +136,4 @@ def __main__():
 
 if __name__ == '__main__':
     __main__()
+

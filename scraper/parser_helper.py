@@ -1,14 +1,18 @@
-from bs4 import BeautifulSoup, UnicodeDammit
+# from bs4 import BeautifulSoup, UnicodeDammit
 import datetime
 import re
+
+"""
+In this module there are a series of functions to help the parsing process.
+"""
+
 
 def get_all_questions(soup):
     """
     This function retrieves all question URLs on one list page.
-    Args:
-        soup (bs4): beautifulsoup boject.
-    Returns:
-        question_urls (list): all the links to questions.
+
+    param: soup - beautifulsoup boject.
+    Returns: question_urls (list): all the links to questions.
     """
     questions_list = soup.findChildren('table', class_ = 'kerdes_lista')
     questions = []
@@ -22,10 +26,13 @@ def get_all_questions(soup):
             continue 
     return questions
 
+
 def get_last_question_page(soup):
     """
-    This function returns the last page of question 
-    in a category
+    This function returns the last page of question in a category
+
+    param: soup - beautifulsoup boject.
+    Returns: last_page (int)    
     """
     full_table = soup.findChild('td', class_ = 'kismenu_main')
     table_footer = full_table.findChildren('div', class_='center')[1]
@@ -36,7 +43,14 @@ def get_last_question_page(soup):
     last_page = URLs[-1].split('-')[-1]
     return last_page
 
-def get_last_page(soup):
+
+def get_last_answer_page(soup):
+    """
+    This function returns the last page of answer for a question
+
+    param: soup - beautifulsoup boject.
+    Returns: last_page (int)    
+    """
     footer = soup.findChild('td', class_ = 'valaszok')
 
     if not footer: return None 
@@ -49,7 +63,16 @@ def get_last_page(soup):
     
     return int(last_page_link.split('-')[-1])
     
+
 def process_date(date_string):
+    """
+    The site has a very weird data/time notation. This function maps it to 
+    standard datetime object.
+
+    param: soup
+    returns: datetime of object of the input date
+    """
+
     # Dictionary to map Hungarian abbreviation of months to English:
     month_mapper = {
         'febr' : 'feb',
@@ -63,7 +86,11 @@ def process_date(date_string):
     }
     
     # Strip whitespace:
-    date_string = date_string.strip()
+    try:
+        date_string = date_string.strip()
+    except:
+        print('[Warning] Translating date ({}) to datetime object has failed. Skipping.'.format(date_string))
+        return None
     
     # Processing unusual date annotation:
     today = datetime.date.today() # today

@@ -1,11 +1,17 @@
-from bs4 import BeautifulSoup, UnicodeDammit
+# from bs4 import BeautifulSoup, UnicodeDammit
 from scraper import parser_helper
-
 import re
 
 class parse_question(object):
     
     def __init__(self, soup, question_URL):
+        """
+        This class parses all question related data. 
+        The URL needs to be passed to have the GYIK ID of the question.
+
+        :param soup: BeautifulSoup object 
+        :param question_URL: URL of the question. (cannot be parsed from the html page)
+        """
         self.soup = soup
         
         # extract question:
