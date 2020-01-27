@@ -1,5 +1,7 @@
 # GYK scraper
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b18d92473e344f929baa2fc3051d0520)](https://app.codacy.com/manual/DSuveges/gyik_scraper?utm_source=github.com&utm_medium=referral&utm_content=DSuveges/gyik_scraper&utm_campaign=Badge_Grade_Dashboard)
+
 This code scrapes data from [gyakorikerdesek.hu](https://www.gyakorikerdesek.hu). The data is not too complex, but complex enough to make sense to load into an sqlite database. The loaded data then can be used to do some analytics.
 
 Finally the code is getting into shape. User can decide to fetch all questions for a category, a range of a category by defining a start and end page or fetching a single question based on a provided URL.
