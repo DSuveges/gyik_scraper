@@ -7,6 +7,7 @@ from db_tools import db_utils
 
 import argparse
 import re
+import sys
 
 
 class scraper(object):
@@ -22,13 +23,13 @@ class scraper(object):
         Initializing by providing the database object.
         With the database object, a loader object is initialized.
         """
-        self.ad_obj = db_utils.db_handler(db_obj.conn) # 
+        self.ad_obj = db_utils.db_handler(db_obj.conn) #
         self.ql = db_utils.question_loader(self.ad_obj) # Question loader
 
 
     def get_all_questions(self, URL_list):
         """
-        This method walks through a list of URLs pointing to question 
+        This method walks through a list of URLs pointing to question
         and parse data and add to databasel
         """
 
@@ -115,8 +116,7 @@ def __main__():
     # Only one page is parsed if direct question is passed:
     if args.directQuestion:
         scraper_o.get_all_questions([args.directQuestion])
-        quit()
-
+        sys.exit()
 
     print('[Info] Fetching data from page..', end ="")
     # Looping through all defined pages:
@@ -129,7 +129,7 @@ def __main__():
 
         # Get URLs for all questions:
         questions = parser_helper.get_all_questions(soup)
-        
+
         # Retrieve all question data:
         scraper_o.get_all_questions(questions)
 

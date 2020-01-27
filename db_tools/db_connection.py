@@ -12,7 +12,7 @@ class db_connection(object):
         ID INTEGER PRIMARY KEY,
         KEYWORD TEXT NOT NULL
     )"""
-    
+
     # Table with all the user information is available:
     user_table_sql = """CREATE TABLE IF NOT EXISTS USER (
         ID INTEGER PRIMARY KEY,
@@ -32,14 +32,14 @@ class db_connection(object):
         URL TEXT NOT NULL,
         USER_ID INTEGER,
         ADDED_DATE DATETIME NOT NULL,
-        FOREIGN KEY (USER_ID) REFERENCES USER (ID) 
+        FOREIGN KEY (USER_ID) REFERENCES USER (ID)
     )"""
 
     # Table with the answers:
     answer_table_sql = """CREATE TABLE IF NOT EXISTS ANSWER (
         ID INTEGER PRIMARY KEY,
         USER_ID INTEGER,
-        GYIK_ID INTEGER NOT NULL, 
+        GYIK_ID INTEGER NOT NULL,
         QUESTION_ID INTEGER NOT NULL,
         ANSWER_DATE DATETIME NOT NULL,
         ANSWER_TEXT TEXT NOT NULL,
@@ -54,10 +54,10 @@ class db_connection(object):
         KEYWORD_ID INTEGER NOT NULL,
         QUESTION_ID INTEGER NOT NULL,
         FOREIGN KEY (KEYWORD_ID) REFERENCES KEYWORD (ID),
-        FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)    
+        FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)
     )"""
-    
-    
+
+
     def __init__(self, filename):
         # Check if file exists:
         if os.path.isfile(filename):
@@ -65,11 +65,11 @@ class db_connection(object):
 
         # Create connection:
         self._create_connection(filename)
-        
+
         # Create all tables:
         self._create_all_tables()
-        
-        
+
+
     def _create_connection(self, db_file):
         """ create a database connection to the SQLite database
             specified by db_file
@@ -78,10 +78,10 @@ class db_connection(object):
         """
         try:
             self.conn = sqlite3.connect(db_file)
-        except Error as e:
+        except:
             print("[Error] DB could not be connected ({}). Exing".format(db_file))
-            raise 
-    
+            raise
+
 
     def _create_table(self, create_table_sql):
         """ create a table from the create_table_sql statement
@@ -92,14 +92,14 @@ class db_connection(object):
         try:
             c = self.conn.cursor()
             c.execute(create_table_sql)
-        except Error as e:
+        except:
             print('[Error] Table could not be connected.')
             raise
-            
-            
+
+
     def _create_all_tables(self):
         tables_to_create = ['keyword','user','question','answer','question_keyword']
-        
+
         # create all tables
         for table in tables_to_create:
             sql_statement = getattr(self, table+'_table_sql')

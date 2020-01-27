@@ -1,30 +1,29 @@
-from bs4 import BeautifulSoup, UnicodeDammit
 from scraper import parser_helper
 import re
 
 
 class parse_answers(object):
-    
+
     def __init__(self,soup):
         """
-        This class parses all answer related data. 
+        This class parses all answer related data.
 
-        :param soup: BeautifulSoup object 
+        :param soup: BeautifulSoup object
         """
 
         self.soup = soup
         self.answer_data = []
-        
+
         # extracting answer table:
         answer_table = soup.html.body.findChild("table", class_="valasz")
-        
+
         # Looping through the table and parse all questions:
         all_answers = answer_table.find_all('tr', recursive=False)
         for index, row in enumerate(all_answers):
 
             # Finding answer rows:
             if len(row.findChildren('td', class_ = 'valaszok vtop')) == 2:
-                
+
                 # Parsing values
                 userName    = self._parse_user(row)
                 answer_id   = self._parse_answer_id(row)
@@ -38,7 +37,7 @@ class parse_answers(object):
                 raw_date    = self._parse_date(all_answers[index + 1])
                 answer_text = self._parse_text(row)
                 userName    = self._parse_user(row)
-                
+
                 # Build data structure:
                 self.answer_data.append({
                     'GYIK_ID' : answer_id,
@@ -74,7 +73,7 @@ class parse_answers(object):
         if a_text.strip() == '':
             a_text_array = row.findChildren('td')[1].findAll(text=True)
             a_text_array = a_text_array[2:]
-            a_text = ' '.join([x for x in a_text_array if not re.match('.+hasznos.+',x)])            
+            a_text = ' '.join([x for x in a_text_array if not re.match('.+hasznos.+',x)])
             a_text = a_text.replace('\n', ' ')
 
         return a_text
@@ -84,7 +83,7 @@ class parse_answers(object):
         usefullness = row.findChild('div', class_ = 'right small')
         try:
             usefullness_text = usefullness.text
-        except:
+        except AttributeError:
             # This happens for answers with no usefulness available for users and answers
             return(None, None)
 
@@ -102,7 +101,7 @@ class parse_answers(object):
         if match_user:
             user_usefullness = match_user.group(1)
         else:
-            user_usefullness = None    
+            user_usefullness = None
 
         return (user_usefullness, answer_usefullness)
 
@@ -124,8 +123,8 @@ class parse_answers(object):
             user_name = 'kerdezo_dummy_user'
 
         return(user_name)
- 
+
 
     def get_answer_data(self):
         return(self.answer_data)
- 
+
