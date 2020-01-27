@@ -15,7 +15,7 @@ def download_page(URL):
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
     time.sleep(0.2)
-    
+
     # URL to download:
     response = requests.get(URL)
 

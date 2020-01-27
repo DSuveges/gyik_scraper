@@ -3,17 +3,17 @@ from scraper import parser_helper
 import re
 
 class parse_question(object):
-    
+
     def __init__(self, soup, question_URL):
         """
-        This class parses all question related data. 
+        This class parses all question related data.
         The URL needs to be passed to have the GYIK ID of the question.
 
-        :param soup: BeautifulSoup object 
+        :param soup: BeautifulSoup object
         :param question_URL: URL of the question. (cannot be parsed from the html page)
         """
         self.soup = soup
-        
+
         # extract question:
         self.q = soup.html.body.findChild("table", class_="kerdes")
 
@@ -25,7 +25,7 @@ class parse_question(object):
         user = self._parse_user()
         text = self._parse_text()
         ID_match = re.search('__(\d+?)-', question_URL)
-                
+
         # Compile into some return value:
         self.question_data = {
             'URL' : question_URL,
@@ -38,11 +38,11 @@ class parse_question(object):
             'KEYWORDS' : keywords,
             'USER' : {'USER' : user, 'USER_PERCENT' : None}
         }
-        
+
     def _parse_title(self):
         title = self.soup.html.title.text
         return title
-        
+
     def _parse_categories(self):
         links = self.soup.html.body.findChild("td", class_="jobb_oldal").findChildren('a')
         category = links[0].text
@@ -74,19 +74,19 @@ class parse_question(object):
             return user_text.replace(' nevű felhasználó kérdése:', '')
         else:
             return None
-        
+
     def _parse_text(self):
         td = self.q.findChildren('td')[2]
-        
+
         if len(td.findChildren('p')) > 0:
             q_text = ' '.join([x.text for x in td.findChildren('p')])
         else:
             q_text = td.find(text=True, recursive=False)
             q_text = q_text.replace('\n', ' ')
-        
+
         return q_text
 
     def get_question_data(self):
         return self.question_data
-    
+
     

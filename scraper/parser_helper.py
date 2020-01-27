@@ -70,7 +70,7 @@ def process_date(date_string):
     The site has a very weird data/time notation. This function maps it to
     standard datetime object.
 
-    param: soup
+    param: string
     returns: datetime of object of the input date
     """
 
@@ -86,12 +86,12 @@ def process_date(date_string):
         'okt'  : 'oct'
     }
 
-    # Strip whitespace:
-    try:
-        date_string = date_string.strip()
-    except:
+    # If the date could not be parsed, a none-type is passed:
+    if date_string is None:
         print('[Warning] Translating date ({}) to datetime object has failed. Skipping.'.format(date_string))
         return None
+
+    date_string = date_string.strip()
 
     # Processing unusual date annotation:
     today = datetime.date.today() # today
