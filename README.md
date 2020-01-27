@@ -1,6 +1,10 @@
 # GYK scraper
 
+<<<<<<< HEAD
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fda2fc70477d4d6e804cb03d9d463e7e)](https://www.codacy.com/manual/DSuveges/gyik_scraper?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DSuveges/gyik_scraper&amp;utm_campaign=Badge_Grade)
+=======
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b18d92473e344f929baa2fc3051d0520)](https://app.codacy.com/manual/DSuveges/gyik_scraper?utm_source=github.com&utm_medium=referral&utm_content=DSuveges/gyik_scraper&utm_campaign=Badge_Grade_Dashboard)
+>>>>>>> a93495606bde75220dcbec25e68442d9015e1513
 
 This code scrapes data from [gyakorikerdesek.hu](https://www.gyakorikerdesek.hu). The data is not too complex, but complex enough to make sense to load into an sqlite database. The loaded data then can be used to do some analytics.
 
