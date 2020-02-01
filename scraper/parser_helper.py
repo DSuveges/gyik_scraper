@@ -22,7 +22,7 @@ def get_all_questions(soup):
             for a in td.find_all('a'):
                 url = a.get('href')
                 if re.match('.+__\d+-.+', url): questions.append('https://www.gyakorikerdesek.hu' + url)
-        except IndexError:
+        except AttributeError:
             # All answers on one page
             continue
     return questions

@@ -1,4 +1,9 @@
+import logging
 import requests
+
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
 import time
 from bs4 import BeautifulSoup, UnicodeDammit
 
@@ -17,7 +22,12 @@ def download_page(URL):
     time.sleep(0.2)
 
     # URL to download:
-    response = requests.get(URL)
+    try:
+        response = requests.get(URL)
+    except ConnectionError:
+        print('[Warning] Problem with connection. After 1 sec. retrying.')
+        time.sleep(1)
+        response = requests.get(URL)
 
     # Returned html document:
     html = response.content.decode('utf-8')

@@ -60,7 +60,7 @@ class db_connection(object):
 
     def __init__(self, filename):
         # Check if file exists:
-        if os.path.isfile(filename):
+        if not os.path.isfile(filename):
             print ("[Info] {} could not be opened. DB is being created.".format(filename))
 
         # Create connection:

@@ -8,6 +8,7 @@ from db_tools import db_utils
 import argparse
 import re
 import sys
+import os
 
 
 class scraper(object):
@@ -81,7 +82,7 @@ def __main__():
     parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
     args = parser.parse_args()
 
-    database_file = args.database
+    database_file = os.path.abspath(args.database)
     category = args.category
     startpage = args.startpage
 
@@ -133,6 +134,7 @@ def __main__():
         # Retrieve all question data:
         scraper_o.get_all_questions(questions)
 
+    print('\n[Info] Done.')
 
 if __name__ == '__main__':
     __main__()
