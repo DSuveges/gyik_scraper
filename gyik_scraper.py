@@ -111,12 +111,12 @@ def __main__():
 
     ## Open database, create connection, initialize loader object:
     db_obj = db_connection.db_connection(database_file) # DB connection
-    scraper_o = scraper(db_obj)
+    scraper_obj = scraper(db_obj)
 
 
     # Only one page is parsed if direct question is passed:
     if args.directQuestion:
-        scraper_o.get_all_questions([args.directQuestion])
+        scraper_obj.get_all_questions([args.directQuestion])
         sys.exit()
 
     print('[Info] Fetching data from page..', end ="")
@@ -132,7 +132,7 @@ def __main__():
         questions = parser_helper.get_all_questions(soup)
 
         # Retrieve all question data:
-        scraper_o.get_all_questions(questions)
+        scraper_obj.get_all_questions(questions)
 
     print('\n[Info] Done.')
 
