@@ -14,12 +14,20 @@ class parse_answers(object):
         self.soup = soup
         self.answer_data = []
 
-        # extracting answer table:
-        answer_table = soup.html.body.findChild("table", class_="valasz")
-
         # Looping through the table and parse all questions:
-        all_answers = answer_table.find_all('tr', recursive=False)
-        for index, row in enumerate(all_answers):
+        for answer in self.soup.findAll('div', id=lambda x: x and x.startswith('valasz-')):
+
+            print(answer.attrs)
+            print(answer.get('id'))
+            print('cica ')
+
+            # Extract answer id:
+            answer_id = answer.get('id').split('-')[1]
+
+            # Extract user name:
+
+            # Extract text:
+            
 
             # Finding answer rows:
             if len(row.findChildren('td', class_ = 'valaszok vtop')) == 2:
@@ -40,7 +48,7 @@ class parse_answers(object):
 
                 # Build data structure:
                 self.answer_data.append({
-                    'GYIK_ID' : answer_id,
+                    'GYIK_ID' : int(answer_id),
                     'USER' : {'USER' : userName, 'USER_PERCENT' : user_percent},
                     'ANSWER_DATE' : parser_helper.process_date(raw_date),
                     'ANSWER_TEXT' : answer_text,

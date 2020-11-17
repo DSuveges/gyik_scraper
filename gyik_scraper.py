@@ -9,6 +9,7 @@ import argparse
 import re
 import sys
 import os
+import logging
 
 
 class scraper(object):
@@ -71,6 +72,14 @@ def __main__():
     the data is saved.
     """
 
+    # Initialize logger - first go with hardcoded logfile:
+    logging.basicConfig(
+        filename='scraper.log',
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
+
     # Core URL:
     URL = 'https://www.gyakorikerdesek.hu'
 
@@ -126,11 +135,12 @@ def __main__():
 
         # Fetch page with questions:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, category, page)
+        print(question_list_page_url)
         soup = download_page.download_page(question_list_page_url)
 
         # Get URLs for all questions:
         questions = parser_helper.get_all_questions(soup)
-
+        print(questions[0])
         # Retrieve all question data:
         scraper_obj.get_all_questions(questions)
 
