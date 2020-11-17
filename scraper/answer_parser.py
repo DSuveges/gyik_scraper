@@ -19,15 +19,21 @@ class parse_answers(object):
 
             print(answer.attrs)
             print(answer.get('id'))
-            print('cica ')
 
             # Extract answer id:
             answer_id = answer.get('id').split('-')[1]
 
             # Extract user name:
+            header_text = answer.find('div', class_='valasz_fejlec').text
+            
+            match =  re.search('\d+/\d+(.+)válasza', header_text)
+            if match:
+                print(header_text)
+                print(match.group(1))
+            continue
 
             # Extract text:
-            
+
 
             # Finding answer rows:
             if len(row.findChildren('td', class_ = 'valaszok vtop')) == 2:

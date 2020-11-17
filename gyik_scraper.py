@@ -52,6 +52,7 @@ class scraper(object):
             # Fetching question based on question URL:
             rq = parse_full_question.retrieve_question(URL)
             data = rq.get_data()
+            print(data)
 
             # Load data:
             self.ql.add_question(data)
@@ -140,9 +141,16 @@ def __main__():
 
         # Get URLs for all questions:
         questions = parser_helper.get_all_questions(soup)
+
+        ## Hardcoding some questions for testing purposes:
+        questions = [
+            'https://www.gyakorikerdesek.hu/tudomanyok__egyeb-kerdesek__10799398-kaphattam-e-ott-akkor-klorgaz-mergezest-igen-mar-regen-tortent-de-meg-mindig-e',
+            'https://www.gyakorikerdesek.hu/elektronikus-eszkozok__mobiltelefonok__10790828-hogyan-lehet-telefonra-windowst-telepiteni',
+            'https://www.gyakorikerdesek.hu/szamitastechnika__programozas__10797595-hogyan-szerezhetek-szerzoi-jogot-az-alkalmazasomhoz'
+        ]
         print(questions[0])
         # Retrieve all question data:
-        scraper_obj.get_all_questions(questions)
+        scraper_obj.get_all_questions(questions[0:1])
 
     print('\n[Info] Done.')
 

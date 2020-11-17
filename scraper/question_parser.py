@@ -14,6 +14,7 @@ class parse_question(object):
         :param question_URL: URL of the question. (cannot be parsed from the html page)
         """
         self.soup = soup
+        print('cicaful')
 
         # extract question:
         self.q = soup.html.body.findChild("table", class_="kerdes")
@@ -37,7 +38,7 @@ class parse_question(object):
             'QUESTION' : text,
             'QUESTION_DATE' : parser_helper.process_date(raw_date),
             'KEYWORDS' : keywords,
-            'USER' : user
+            'USER' : {'USER' : user, 'USER_PERCENT' : None}
         }
 
     def _parse_title(self):
@@ -89,6 +90,7 @@ class parse_question(object):
             return q_text
 
     def get_question_data(self):
+        print(self.question_data)
         return self.question_data
 
     
