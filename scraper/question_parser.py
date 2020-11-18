@@ -1,7 +1,6 @@
 # from bs4 import BeautifulSoup, UnicodeDammit
 from scraper import parser_helper
 import re
-import json
 
 class parse_question(object):
 

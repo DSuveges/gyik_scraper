@@ -97,7 +97,7 @@ class parse_answers(object):
     @staticmethod
     def _parse_user(row):
 
-        header_text = row.find('div', class_=lambda x: x and x.endswith('_fejlec')).text                
+        header_text = row.find('div', class_=lambda x: x and x.endswith('_fejlec')).text
         match =  re.search('\d+/\d+(.+)válasza', header_text)
 
         try:

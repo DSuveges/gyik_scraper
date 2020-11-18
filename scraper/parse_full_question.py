@@ -32,7 +32,7 @@ class retrieve_question(object):
                 question_document['ANSWERS'] += pa.get_answer_data()
 
         # If the poster name is given, we look through the answers and update the user name:
-        if question_document['USER']:
+        if question_document['USER']['USER']:
             for answer in question_document['ANSWERS']:
                 if answer['USER']['USER'] == 'kerdezo_dummy_user':
                     answer['USER']['USER'] = question_document['USER']['USER']
