@@ -14,7 +14,6 @@ class parse_question(object):
         :param question_URL: URL of the question. (cannot be parsed from the html page)
         """
         self.soup = soup
-        print('cicaful')
 
         # extract question:
         self.q = soup.html.body.findChild("table", class_="kerdes")
@@ -82,15 +81,18 @@ class parse_question(object):
     def _parse_text(self):
         kerdes_body = self.soup.find('div', class_='kerdes_kerdes')
 
+        # Removing unwanted divs:
+        for div in kerdes_body.findAll('div'):
+            div.decompose()
+
         if kerdes_body.text:
-            text = kerdes_body.text.replace('\n', ' ').replace('Figyelt kérdés','')
+            text = kerdes_body.text.replace('\n', ' ')
             return text
         else:
             q_text = ' '.join([x.text for x in kerdes_body.findAll('p')])
             return q_text
 
     def get_question_data(self):
-        print(self.question_data)
         return self.question_data
 
     

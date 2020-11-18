@@ -16,7 +16,8 @@ class db_connection(object):
     # Table with all the user information is available:
     user_table_sql = """CREATE TABLE IF NOT EXISTS USER (
         ID INTEGER PRIMARY KEY,
-        USER TEXT NOT NULL
+        USER TEXT NOT NULL,
+        USER_PERCENT NUMERIC
     )"""
 
     # Table in which we store question data:
@@ -42,6 +43,7 @@ class db_connection(object):
         QUESTION_ID INTEGER NOT NULL,
         ANSWER_DATE DATETIME NOT NULL,
         ANSWER_TEXT TEXT NOT NULL,
+        USER_PERCENT NUMERIC,
         ANSWER_PERCENT NUMERIC,
         FOREIGN KEY (USER_ID) REFERENCES USER (ID),
         FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)
@@ -102,4 +104,3 @@ class db_connection(object):
         for table in tables_to_create:
             sql_statement = getattr(self, table+'_table_sql')
             self._create_table(sql_statement)
-

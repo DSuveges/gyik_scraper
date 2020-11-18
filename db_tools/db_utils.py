@@ -10,8 +10,13 @@ class db_handler(object):
 
 
     # Add new user to table:
-    add_user_sql = '''INSERT INTO USER(USER)
-                    VALUES(:user)'''
+    add_user_sql = '''INSERT INTO USER(USER, USER_PERCENT)
+                    VALUES(:user, :user_percent)'''
+
+    # Update percent of an existing user:
+    update_percent_sql = '''UPDATE USER
+                    SET USER_PERCENT = :user_percent
+                    WHERE USER = :user'''
 
     # Retrieve user based on username:
     get_user_sql = '''SELECT * FROM USER WHERE USER = :user'''
@@ -49,9 +54,11 @@ class db_handler(object):
     # Inserting data to answers:
     add_answer_sql = '''INSERT INTO ANSWER(
                 GYIK_ID, USER_ID, QUESTION_ID,
-                ANSWER_DATE, ANSWER_TEXT, ANSWER_PERCENT)
+                ANSWER_DATE, ANSWER_TEXT,
+                USER_PERCENT, ANSWER_PERCENT)
         VALUES(:gyik_id, :user_id, :question_id,
-            :answer_date, :answer_text, :answer_percent)'''
+            :answer_date, :answer_text,
+            :user_percent, :answer_percent)'''
 
     def __init__(self, connection):
         """
@@ -239,7 +246,6 @@ class db_handler(object):
 class question_loader(object):
     """
     This class loads data of a full question (question, keywords, answers etc) into the database.
-
     There is a very specific order in which the data can be loaded into the database.
     """
 
@@ -296,3 +302,5 @@ class question_loader(object):
 
         # The changes are only committed after all uploads were successfully completed.
         self.db_obj.commit()
+
+        
