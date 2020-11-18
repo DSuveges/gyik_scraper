@@ -104,4 +104,3 @@ class db_connection(object):
         for table in tables_to_create:
             sql_statement = getattr(self, table+'_table_sql')
             self._create_table(sql_statement)
-

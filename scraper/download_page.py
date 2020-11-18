@@ -41,7 +41,7 @@ def download_page(URL, session = None):
     '''
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
-    time.sleep(0.2)
+    time.sleep(0.5)
 
     # If no session is provided we generate session:
     if not session:

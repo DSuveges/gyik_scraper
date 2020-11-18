@@ -14,115 +14,102 @@ class parse_answers(object):
         self.soup = soup
         self.answer_data = []
 
-        # extracting answer table:
-        answer_table = soup.html.body.findChild("table", class_="valasz")
-
         # Looping through the table and parse all questions:
-        all_answers = answer_table.find_all('tr', recursive=False)
-        for index, row in enumerate(all_answers):
+        for answer in self.soup.findAll('div', id=lambda x: x and x.startswith('valasz-')):
 
-            # Finding answer rows:
-            if len(row.findChildren('td', class_ = 'valaszok vtop')) == 2:
+            # Extract answer id:
+            answer_id = answer.get('id').split('-')[1]
 
-                # Parsing values
-                userName    = self._parse_user(row)
-                answer_id   = self._parse_answer_id(row)
+            # Parsing user name if available:
+            userName = self._parse_user(answer)
 
-                # If the original poster submits a comment we don't expect percents:
-                if userName == 'kerdezo_dummy_user':
-                    (user_percent, answer_percent) = (None, None)
-                else:
-                    (user_percent, answer_percent) = self._parse_usefulness(row)
+            # If the original poster submits a comment we don't expect usefulness values:
+            if userName == 'kerdezo_dummy_user':
+                (user_percent, answer_percent) = (None, None)
+            else:
+                (user_percent, answer_percent) = self._parse_usefulness(answer)
 
-                raw_date    = self._parse_date(all_answers[index + 1])
-                answer_text = self._parse_text(row)
-                userName    = self._parse_user(row)
+            # Parse date and time of providing answer:
+            answer_date = self._parse_date(answer)
 
-                # Build data structure:
-                self.answer_data.append({
-                    'GYIK_ID' : answer_id,
-                    'USER' : {'USER' : userName, 'USER_PERCENT' : user_percent},
-                    'ANSWER_DATE' : parser_helper.process_date(raw_date),
-                    'ANSWER_TEXT' : answer_text,
-                    'USER_PERCENT' : user_percent,
-                    'ANSWER_PERCENT' : answer_percent
-                })
+            # Parsing answer text:
+            answer_text = self._parse_text(answer, answer_id)
 
+            # Removing links:
+            answer_text = answer_text.replace('[link]', '')
 
-    def _parse_answer_id(self, row):
-        a_tag = row.findAll('a')
-
-        if a_tag == 0:
-            return None
-
-        a_id = a_tag[0].get('id').replace('valasz-','')
-        return a_id
+            # Build data structure:
+            self.answer_data.append({
+                'GYIK_ID' : int(answer_id),
+                'USER' : {'USER' : userName, 'USER_PERCENT' : user_percent},
+                'ANSWER_DATE' : parser_helper.process_date(answer_date),
+                'ANSWER_TEXT' : answer_text,
+                'USER_PERCENT' : user_percent,
+                'ANSWER_PERCENT' : answer_percent
+            })
 
 
-    def _parse_text(self, row):
-        p = row.findChildren('p')
+    @staticmethod
+    def _parse_text(row, answer_id):
+        answer_body = row.find('div', id=f'valasz{answer_id}')
 
-        if len(p) > 0:
-            a_text = ' '.join([x.text for x in p])
-        else:
-            td = row.findChildren('td')[1]
-            a_text_array = td.findAll(text=True, recursive=False)
-            a_text = ' '.join(a_text_array)
-            a_text = a_text.replace('\n', ' ')
+        # Looping through all divs and delete them:
+        for div in answer_body.findAll('div'):
+            div.decompose()
 
-        if a_text.strip() == '':
-            a_text_array = row.findChildren('td')[1].findAll(text=True)
-            a_text_array = a_text_array[2:]
-            a_text = ' '.join([x for x in a_text_array if not re.match('.+hasznos.+',x)])
-            a_text = a_text.replace('\n', ' ')
-
-        return a_text
+        return answer_body.text
 
 
-    def _parse_usefulness(self, row):
-        usefullness = row.findChild('div', class_ = 'right small')
+    @staticmethod
+    def _parse_usefulness(row):
+
+        # Get answer header:
+        header = row.find('div', class_=lambda x: x and x.endswith('_fejlec'))
+        stars = header.find('span', class_='vsz')
+
+        # Parsing user usefulness:
         try:
-            usefullness_text = usefullness.text
-        except AttributeError:
-            # This happens for answers with no usefulness available for users and answers
-            return(None, None)
-
-        # Try to fetch usefullness of answer:
-        match_answer = re.search('lasz (.+?)%', usefullness_text)
-
-        if match_answer:
-            answer_usefullness = match_answer.group(1)
-        else:
-            answer_usefullness = None
-
-        # Try to fetch usefullness of user:
-        match_user = re.search('szíró (.+?)%', usefullness_text)
-
-        if match_user:
-            user_usefullness = match_user.group(1)
-        else:
+            user_usefullness = 0
+            for star in stars.findAll('img'):
+                link = star.get('src')
+                match = re.search('vsz(\d)\.png', link)
+                user_usefullness += 10 * int(match.group(1))
+        except:
             user_usefullness = None
+
+        # Parsing answer usefulness:
+        try:
+            text = row.find('text', x=50).text
+            answer_usefullness = int(text.replace('%',''))
+        except AttributeError:
+            # This happens for answers with not enough rating:
+            answer_usefullness = None
 
         return (user_usefullness, answer_usefullness)
 
 
-    def _parse_date(self, row):
-        date_text = row.findChild('td', class_ = 'datum').text
-        return date_text
+    @staticmethod
+    def _parse_date(row):
+        footer = row.find('div', class_ = lambda x: x and x.endswith('_statusz')).findAll('div')
+        return footer[0].text
 
 
-    def _parse_user(self,row):
-        user = row.findChild('span', class_ = 'sc0')
-        if user:
-            user_name = user.text.replace(' nevű felhasználó válasza:', '')
-        else:
-            user_name = None
+    @staticmethod
+    def _parse_user(row):
 
-        # Assigning dummy user name for the original poster:
-        if user_name == 'A kérdező kommentje:':
+        header_text = row.find('div', class_=lambda x: x and x.endswith('_fejlec')).text
+        match =  re.search('\d+/\d+(.+)válasza', header_text)
+
+        try:
+            user_name = match.group(1).strip()
+        except:
             user_name = 'kerdezo_dummy_user'
 
-        return(user_name)
+        # Anonim users are ignored:
+        if user_name == 'anonim':
+            user_name = None
+
+        return user_name
 
 
     def get_answer_data(self):

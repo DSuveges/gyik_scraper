@@ -246,7 +246,6 @@ class db_handler(object):
 class question_loader(object):
     """
     This class loads data of a full question (question, keywords, answers etc) into the database.
-
     There is a very specific order in which the data can be loaded into the database.
     """
 
@@ -303,3 +302,5 @@ class question_loader(object):
 
         # The changes are only committed after all uploads were successfully completed.
         self.db_obj.commit()
+
+        

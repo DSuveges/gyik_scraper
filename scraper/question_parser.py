@@ -44,23 +44,25 @@ class parse_question(object):
         return title
 
     def _parse_categories(self):
-        links = self.soup.html.body.findChild("td", class_="jobb_oldal").findChildren('a')
-        category = links[0].text
-        subcategory = links[1].text
+        links = self.soup.findAll("div", class_="morzsamenu")[0].findChildren('a')
+        category = links[1].text
+        subcategory = links[2].text
 
         return (category, subcategory)
 
     def _parse_keywords(self):
-        small_letters = self.q.findChild('div', class_ = 'right small')
-        # Extract keywords:
-        if small_letters:
-            kw = small_letters.find_all('a')
-            return  [x.text for x in kw]
-        else:
-            return []
+        keywords = []
+        # Extracting keywords:
+        try:
+            for kulcsszo in self.soup.find('div', class_ = 'kerdes_kulcsszo').findAll('a'):
+                keywords.append(kulcsszo.text.replace('#',''))
+        except:
+            pass
+
+        return keywords
 
     def _parse_date(self):
-        q_date = self.q.findChild('span', title='A kérdés kiírásának időpontja')
+        q_date = self.soup.find('div', title='A kérdés kiírásának időpontja')
 
         if q_date:
             return q_date.text
@@ -68,23 +70,26 @@ class parse_question(object):
             return None
 
     def _parse_user(self):
-        user = self.q.findChild('span', class_ = 'sc0')
-        if user:
-            user_text = user.text
-            return user_text.replace(' nevű felhasználó kérdése:', '')
+        user = self.soup.find('div', class_='kerdes_fejlec')
+        if len(user.findAll('div')) > 0:
+            user_text = user.find('div').text
+            return user_text.replace(' kérdése:', '')
         else:
             return None
 
     def _parse_text(self):
-        td = self.q.findChildren('td')[2]
+        kerdes_body = self.soup.find('div', class_='kerdes_kerdes')
 
-        if len(td.findChildren('p')) > 0:
-            q_text = ' '.join([x.text for x in td.findChildren('p')])
+        # Removing unwanted divs:
+        for div in kerdes_body.findAll('div'):
+            div.decompose()
+
+        if kerdes_body.text:
+            text = kerdes_body.text.replace('\n', ' ')
+            return text
         else:
-            q_text = td.find(text=True, recursive=False)
-            q_text = q_text.replace('\n', ' ')
-
-        return q_text
+            q_text = ' '.join([x.text for x in kerdes_body.findAll('p')])
+            return q_text
 
     def get_question_data(self):
         return self.question_data

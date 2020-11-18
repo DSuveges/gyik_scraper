@@ -14,18 +14,17 @@ def get_all_questions(soup):
     param: soup - beautifulsoup boject.
     Returns: question_urls (list): all the links to questions.
     """
-    questions_list = soup.findChildren('table', class_ = 'kerdes_lista')
-    questions = []
-    flat_questions = [item for sublist in questions_list for item in sublist]
-    for td in flat_questions:
+    questions_list = soup.findChildren('div', class_ = 'kerdeslista_szoveg')
+    questions_urls = []
+    for question in questions_list:
         try:
-            for a in td.find_all('a'):
+            for a in question.find_all('a'):
                 url = a.get('href')
-                if re.match('.+__\d+-.+', url): questions.append('https://www.gyakorikerdesek.hu' + url)
+                if re.match('.+__\d+-.+', url): questions_urls.append('https://www.gyakorikerdesek.hu' + url)
         except AttributeError:
             # All answers on one page
             continue
-    return questions
+    return questions_urls
 
 
 def get_last_question_page(soup):
@@ -35,14 +34,14 @@ def get_last_question_page(soup):
     param: soup - beautifulsoup boject.
     Returns: last_page (int)
     """
-    full_table = soup.findChild('td', class_ = 'kismenu_main')
-    table_footer = full_table.findChildren('div', class_='center')[1]
+
+    table_footer = soup.findChildren('div', class_='oldalszamok')[1]
     URLs = [a_tag.get('href') for a_tag in table_footer.findAll('a') ]
     if len(URLs) == 0:
         print('[Warning] Failed to retrieve last page.')
         return None
     last_page = URLs[-1].split('-')[-1]
-    return last_page
+    return int(last_page)
 
 
 def get_last_answer_page(soup):
