@@ -97,7 +97,7 @@ def __main__():
 
     database_file = os.path.abspath(args.database)
     category = args.category
-    startpage = args.startpage
+    startPage = args.startPage
 
     # URL path is changed depending if subcategory is provided or not:
     url_path = f'{category}__{args.subCategory}' if args.subCategory else category
@@ -106,22 +106,22 @@ def __main__():
     test_page = download_page.download_page('{}/{}'.format(URL,url_path))
 
     # If the end page is not defined, we fetch the last page from the page list:
-    if not args.endpage:
-        endpage = parser_helper.get_last_question_page(test_page)
+    if not args.endPage:
+        endPage = parser_helper.get_last_question_page(test_page)
     else:
-        endpage = args.endpage
+        endPage = args.endPage
 
-    # Test if the endpage is higher:
-    if int(startpage) >= int(endpage):
-        logging.error(f'The endpage ({startpage}) must be lower than end page ({endpage})')
+    # Test if the endPage is higher:
+    if int(startPage) >= int(endPage):
+        logging.error(f'The endPage ({startPage}) must be lower than end page ({endPage})')
         raise ValueError
 
     # Log startup parameters:
     logging.info(f'Category: {category}')
     if args.subCategory:
         logging.info(f'Subcategory: {args.subCategory}')
-    logging.info(f'First page of questions: {startpage}')
-    logging.info(f'Last page of questions: {endpage}')
+    logging.info(f'First page of questions: {startPage}')
+    logging.info(f'Last page of questions: {endPage}')
 
     ## Open database, create connection, initialize loader object:
     db_obj = db_connection.db_connection(database_file) # DB connection
@@ -135,7 +135,7 @@ def __main__():
     logging.info('Fetching data started...')
     
     # Looping through all defined pages:
-    for page in range(startpage, endpage+1):
+    for page in range(startPage, endPage+1):
 
         # Fetch page with questions:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, url_path, page)
