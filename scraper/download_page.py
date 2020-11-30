@@ -9,6 +9,7 @@ import time
 from bs4 import BeautifulSoup, UnicodeDammit
 
 # from scraper_api import ScraperAPIClient
+logger = logging.getLogger('__main__')
 
 
 # Problematic questions:
@@ -46,7 +47,7 @@ def download_page(URL, session = None):
     '''
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
-    time.sleep(15)
+    time.sleep(10)
 
     # If no session is provided we generate session:
     session = requests_retry_session()
@@ -59,7 +60,7 @@ def download_page(URL, session = None):
         # response = client.get(url = URL)
         response = session.get(URL)
     except ConnectionError:
-        print('[Warning] request failed.')
+        logger.warning(f'request failed for URL: {URL}')
 
     # Returned html document:
     html = response.text
@@ -72,10 +73,11 @@ def download_page(URL, session = None):
 
     try:
         if soup.find('title').text == 'Captcha!':
-            print("[Warning] We have triggered the captcha...")
+            logger.warning(f"We have triggered the captcha... ({URL})")
     except AttributeError:
         raise ValueError(f'The provided URL ({URL}) cound not retrieve data. Category or subcategory might be wrong...')
 
 
     # check if the returned value contain the html.
     return soup
+    

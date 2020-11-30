@@ -1,10 +1,13 @@
 # from bs4 import BeautifulSoup, UnicodeDammit
 import datetime
 import re
+import logging
 
 """
 In this module there are a series of functions to help the parsing process.
 """
+
+logger = logging.getLogger('__main__')
 
 
 def get_all_questions(soup):
@@ -38,7 +41,7 @@ def get_last_question_page(soup):
         table_footer = soup.findChildren('div', class_='oldalszamok')[1]
         URLs = [a_tag.get('href') for a_tag in table_footer.findAll('a') ]
         if len(URLs) == 0:
-            print('[Warning] Failed to retrieve last page.')
+            logger.warning('Failed to retrieve last page.')
             return None
         last_page = URLs[-1].split('-')[-1]
         return int(last_page)
@@ -90,7 +93,7 @@ def process_date(date_string):
 
     # If the date could not be parsed, a none-type is passed:
     if date_string is None:
-        print('[Warning] Translating date ({}) to datetime object has failed. Skipping.'.format(date_string))
+        logger.warning('[Warning] Translating date ({}) to datetime object has failed. Skipping.'.format(date_string))
         return None
 
     date_string = date_string.strip()

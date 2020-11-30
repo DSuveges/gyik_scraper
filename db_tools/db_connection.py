@@ -1,5 +1,8 @@
 import sqlite3
 import os.path
+import logging
+
+logger = logging.getLogger('__main__')
 
 class db_connection(object):
     """
@@ -61,7 +64,7 @@ class db_connection(object):
     def __init__(self, filename):
         # Check if file exists:
         if not os.path.isfile(filename):
-            print ("[Info] {} could not be opened. DB is being created.".format(filename))
+            logger.info(f"{filename} could not be opened. DB is being created.")
 
         # Create connection:
         self._create_connection(filename)
@@ -79,8 +82,8 @@ class db_connection(object):
         try:
             self.conn = sqlite3.connect(db_file)
         except:
-            print("[Error] DB could not be connected ({}). Exing".format(db_file))
-            raise
+            logger.error(f"[Error] DB could not be connected ({db_file}). Exiting")
+            raise ConnectionError(f"[Error] DB could not be connected ({db_file}). Exiting")
 
 
     def _create_table(self, create_table_sql):
@@ -93,8 +96,8 @@ class db_connection(object):
             c = self.conn.cursor()
             c.execute(create_table_sql)
         except:
-            print('[Error] Table could not be connected.')
-            raise
+            logger.error('Table could not be created.')
+            raise ConnectionErrorn('Table could not be created.')
 
 
     def _create_all_tables(self):
