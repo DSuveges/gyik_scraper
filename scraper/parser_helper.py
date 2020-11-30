@@ -34,14 +34,17 @@ def get_last_question_page(soup):
     param: soup - beautifulsoup boject.
     Returns: last_page (int)
     """
+    try:
+        table_footer = soup.findChildren('div', class_='oldalszamok')[1]
+        URLs = [a_tag.get('href') for a_tag in table_footer.findAll('a') ]
+        if len(URLs) == 0:
+            print('[Warning] Failed to retrieve last page.')
+            return None
+        last_page = URLs[-1].split('-')[-1]
+        return int(last_page)
+    except IndexError:
+        None
 
-    table_footer = soup.findChildren('div', class_='oldalszamok')[1]
-    URLs = [a_tag.get('href') for a_tag in table_footer.findAll('a') ]
-    if len(URLs) == 0:
-        print('[Warning] Failed to retrieve last page.')
-        return None
-    last_page = URLs[-1].split('-')[-1]
-    return int(last_page)
 
 
 def get_last_answer_page(soup):

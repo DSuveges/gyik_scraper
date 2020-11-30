@@ -99,17 +99,12 @@ def __main__():
     # URL path is changed depending if subcategory is provided or not:
     url_path = f'{category}__{args.subCategory}' if args.subCategory else category
 
+    # One page is retrieved to determine if the category_subcategory pair is valid or not:
+    test_page = download_page.download_page('{}/{}'.format(URL,url_path))
+
     # If the end page is not defined, we fetch the last page from the page list:
     if not args.endpage:
-        print('[Info] End page is not defined. Fetching last page from path: ({}).'.format(url_path))
-        soup = download_page.download_page('{}/{}'.format(URL,url_path))
-
-        # There's an attribute error if the category is not properly typed:
-        try:
-            endpage = parser_helper.get_last_question_page(soup)
-        except AttributeError:
-            print('[Error] Cound not find page for path: {}'.format(url_path))
-            raise
+        endpage = parser_helper.get_last_question_page(test_page)
     else:
         endpage = args.endpage
 

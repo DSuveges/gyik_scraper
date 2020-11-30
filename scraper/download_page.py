@@ -70,8 +70,12 @@ def download_page(URL, session = None):
     # Creating soup:
     soup = BeautifulSoup(uhtml.unicode_markup, features="html.parser")
 
-    if soup.find('title').text == 'Captcha!':
-        print("[Warning] We have triggered the captcha...")
+    try:
+        if soup.find('title').text == 'Captcha!':
+            print("[Warning] We have triggered the captcha...")
+    except AttributeError:
+        raise ValueError(f'The provided URL ({URL}) cound not retrieve data. Category or subcategory might be wrong...')
+
 
     # check if the returned value contain the html.
     return soup
