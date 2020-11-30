@@ -83,28 +83,32 @@ def __main__():
     # Core URL:
     URL = 'https://www.gyakorikerdesek.hu'
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="This script fetches data from http://gyakorikerdesek.hu and feeds into an SQLite database.")
     parser.add_argument('--category', type=str, help='Main category. Mandatory', required = True)
     parser.add_argument('--startpage', type=int, help='Start page of the question list', required = False, default = 0)
     parser.add_argument('--endpage', type=int, help='end page of the question list.', required = False)
     parser.add_argument('--directQuestion', type = str, help ='direct link to scrape to a specific question', required = False)
     parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
+    parser.add_argument('--subCategory', type=str, help='Subcategory within the category.', required = False)
     args = parser.parse_args()
 
     database_file = os.path.abspath(args.database)
     category = args.category
     startpage = args.startpage
 
+    # URL path is changed depending if subcategory is provided or not:
+    url_path = f'{category}__{args.subCategory}' if args.subCategory else category
+
     # If the end page is not defined, we fetch the last page from the page list:
     if not args.endpage:
-        print('[Info] End page is not defined. Fetching last page of the category ({}).'.format(category))
-        soup = download_page.download_page('{}/{}'.format(URL,category))
+        print('[Info] End page is not defined. Fetching last page from path: ({}).'.format(url_path))
+        soup = download_page.download_page('{}/{}'.format(URL,url_path))
 
         # There's an attribute error if the category is not properly typed:
         try:
             endpage = parser_helper.get_last_question_page(soup)
         except AttributeError:
-            print('[Error] Cound not find page for category: {}'.format(category))
+            print('[Error] Cound not find page for path: {}'.format(url_path))
             raise
     else:
         endpage = args.endpage
@@ -115,6 +119,8 @@ def __main__():
         raise ValueError
 
     print('[Info] Category: {}'.format(category))
+    if args.subCategory:
+        print(f'[Info] Subcategory: {args.subCategory}')
     print('[Info] First page of questions: {}'.format(startpage))
     print('[Info] Last page of questions: {}'.format(endpage))
 
@@ -133,7 +139,7 @@ def __main__():
         print(".", end ="")
 
         # Fetch page with questions:
-        question_list_page_url ='{}/{}__oldal-{}'.format(URL, category, page)
+        question_list_page_url ='{}/{}__oldal-{}'.format(URL, url_path, page)
         soup = download_page.download_page(question_list_page_url)
 
         # Get URLs for all questions:
