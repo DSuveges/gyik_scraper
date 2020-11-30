@@ -1,5 +1,8 @@
 import sqlite3
 from datetime import datetime
+import logging
+
+logger = logging.getLogger('__main__')
 
 
 class db_handler(object):
@@ -83,7 +86,7 @@ class db_handler(object):
         if not self.cursor.fetchone():
             self.cursor.execute(self.link_to_keyword_sql, {'question_id' : question_id, 'keyword_id' : keyword_id})
         else:
-            print('[Warning] link already exist.')
+            logger.warning('Question/keyword link already exist.')
 
     def add_user(self,user,percent):
         '''
@@ -119,7 +122,7 @@ class db_handler(object):
 
         # None values cannot be added:
         if not keyword:
-            print('[Error] keyword must exists.')
+            logger.warning('Keyword must be specified!')
             return None
 
         # Fetch data from db:
@@ -168,7 +171,7 @@ class db_handler(object):
 
         # Test if this question is already in the database:
         if self.test_question(question_data['GYIK_ID']):
-            print('[Warning] This question has already been added to the database! Skipping')
+            logger.warning(f'This question id ({question_data["GYIK_ID"]}) has already been added to the database! Skipping')
             return None
 
         # Submit query:
@@ -217,7 +220,7 @@ class db_handler(object):
 
         # Test if this question is already in the database:
         if self.test_answer(answer_data['GYIK_ID']):
-            print('[Warning] This question has already been added to the database! Skipping')
+            logger.warning(f'This question ({answer_data["GYIK_ID"]}) has already been added to the database! Skipping')
             return None
 
         # Submit query:

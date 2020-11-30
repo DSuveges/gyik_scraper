@@ -37,9 +37,9 @@ class scraper(object):
 
         # Test input:
         if not isinstance(URL_list, list):
-            print('[Error] scraper.get_all_questions requires a list input. {} is given.'.format(type(URL_list)))
-            print('[Error] Input data:\n')
-            print(URL_list)
+            logging.error(f'scraper.get_all_questions requires a list input. {type(URL_list)} is given.')
+            logging.error('Input data:\n')
+            logging.error(URL_list)
             raise TypeError
 
         # Looping through URLs:
@@ -47,7 +47,9 @@ class scraper(object):
 
             # Testing if question is loaded into the database:
             match = re.search('__(\d+)-',URL)
-            if self.test_question(match[1]): continue
+            if self.test_question(match[1]): 
+                logging.warning(f'Question is already in the database: {URL}')
+                continue
 
             # Fetching question based on question URL:
             rq = parse_full_question.retrieve_question(URL)
@@ -72,25 +74,26 @@ def __main__():
     the data is saved.
     """
 
-    # Initialize logger - first go with hardcoded logfile:
-    logging.basicConfig(
-        filename='scraper.log',
-        level=logging.INFO,
-        format='%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
-
     # Core URL:
     URL = 'https://www.gyakorikerdesek.hu'
 
     parser = argparse.ArgumentParser(description="This script fetches data from http://gyakorikerdesek.hu and feeds into an SQLite database.")
     parser.add_argument('--category', type=str, help='Main category. Mandatory', required = True)
-    parser.add_argument('--startpage', type=int, help='Start page of the question list', required = False, default = 0)
-    parser.add_argument('--endpage', type=int, help='end page of the question list.', required = False)
+    parser.add_argument('--startPage', type=int, help='Start page of the question list', required = False, default = 0)
+    parser.add_argument('--endPage', type=int, help='end page of the question list.', required = False)
     parser.add_argument('--directQuestion', type = str, help ='direct link to scrape to a specific question', required = False)
     parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
     parser.add_argument('--subCategory', type=str, help='Subcategory within the category.', required = False)
+    parser.add_argument('--logFile', type=str, help='File into which the logs are saved', required=False, default='scraper.log')
     args = parser.parse_args()
+
+    # Initialize logger:
+    logging.basicConfig(
+        filename=args.logFile,
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
 
     database_file = os.path.abspath(args.database)
     category = args.category
@@ -110,14 +113,15 @@ def __main__():
 
     # Test if the endpage is higher:
     if int(startpage) >= int(endpage):
-        print('[Error] The endpage ({}) must be lower than end page ({})'.format(startpage, endpage))
+        logging.error(f'The endpage ({startpage}) must be lower than end page ({endpage})')
         raise ValueError
 
-    print('[Info] Category: {}'.format(category))
+    # Log startup parameters:
+    logging.info(f'Category: {category}')
     if args.subCategory:
-        print(f'[Info] Subcategory: {args.subCategory}')
-    print('[Info] First page of questions: {}'.format(startpage))
-    print('[Info] Last page of questions: {}'.format(endpage))
+        logging.info(f'Subcategory: {args.subCategory}')
+    logging.info(f'First page of questions: {startpage}')
+    logging.info(f'Last page of questions: {endpage}')
 
     ## Open database, create connection, initialize loader object:
     db_obj = db_connection.db_connection(database_file) # DB connection
@@ -128,10 +132,10 @@ def __main__():
         scraper_obj.get_all_questions([args.directQuestion])
         sys.exit()
 
-    print('[Info] Fetching data from page..', end ="")
+    logging.info('Fetching data started...')
+    
     # Looping through all defined pages:
-    for page in range(startpage,endpage):
-        print(".", end ="")
+    for page in range(startpage, endpage+1):
 
         # Fetch page with questions:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, url_path, page)
@@ -140,19 +144,15 @@ def __main__():
         # Get URLs for all questions:
         questions = parser_helper.get_all_questions(soup)
 
-        ## Hardcoding some questions for testing purposes:
-        # questions = [
-        #     'https://www.gyakorikerdesek.hu/tudomanyok__termeszettudomanyok__9002428-egely-gyorgy-mibol-el-milyen-tudomanyos-projektekben-dolgozik',
-        #     'https://www.gyakorikerdesek.hu/tudomanyok__egyeb-kerdesek__10799398-kaphattam-e-ott-akkor-klorgaz-mergezest-igen-mar-regen-tortent-de-meg-mindig-e',
-        #     'https://www.gyakorikerdesek.hu/elektronikus-eszkozok__mobiltelefonok__10790828-hogyan-lehet-telefonra-windowst-telepiteni',
-        #     'https://www.gyakorikerdesek.hu/szamitastechnika__programozas__10797595-hogyan-szerezhetek-szerzoi-jogot-az-alkalmazasomhoz'
-        # ]
-
         # Retrieve all question data:
         scraper_obj.get_all_questions(questions)
 
-    print('\n[Info] Done.')
+        logging.info(f'page completed: {question_list_page_url}')
+
+    logging.info('Scarping completed.')
+
 
 if __name__ == '__main__':
+    
     __main__()
 
