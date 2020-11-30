@@ -122,7 +122,6 @@ def __main__():
     db_obj = db_connection.db_connection(database_file) # DB connection
     scraper_obj = scraper(db_obj)
 
-
     # Only one page is parsed if direct question is passed:
     if args.directQuestion:
         scraper_obj.get_all_questions([args.directQuestion])
@@ -135,7 +134,6 @@ def __main__():
 
         # Fetch page with questions:
         question_list_page_url ='{}/{}__oldal-{}'.format(URL, category, page)
-        print(question_list_page_url)
         soup = download_page.download_page(question_list_page_url)
 
         # Get URLs for all questions:
