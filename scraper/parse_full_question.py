@@ -7,38 +7,53 @@ from scraper import parser_helper
 class retrieve_question(object):
 
     def __init__(self, URL):
-        soup = download_page.download_page(URL)
+        self.soup = self.fetch_url(URL)
+        self.url = URL
 
         # Parse question data:
-        pq = question_parser.parse_question(soup, URL)
+        pq = question_parser.parse_question(self.soup, URL)
 
-        # Initialize document:
-        question_document = pq.get_question_data()
-        question_document['ANSWERS'] = []
+        # Parsing question related information:
+        self.question_document = pq.get_question_data()
 
-        # Parse answer data on first page:
-        pa = answer_parser.parse_answers(soup)
-        if pa.get_answer_data():
-            question_document['ANSWERS'] += pa.get_answer_data()
+        # if we know who asked the question:
+        self.user = self.question_document['USER']['USER']
 
-        # Get last page of the answer:
-        last_page = parser_helper.get_last_answer_page(soup)
+        # Parsing answers:
+        self.question_document['ANSWERS'] = self.parse_all_answers()
 
-        if last_page:
-            for page_URL in ['{}__oldal-{}'.format(URL,x) for x in range(1,last_page+1)]:
-                soup = download_page.download_page(page_URL)
-                pa = answer_parser.parse_answers(soup)
-
-                question_document['ANSWERS'] += pa.get_answer_data()
-
-        # If the poster name is given, we look through the answers and update the user name:
-        if question_document['USER']['USER']:
-            for answer in question_document['ANSWERS']:
-                if answer['USER']['USER'] == 'kerdezo_dummy_user':
-                    answer['USER']['USER'] = question_document['USER']['USER']
-
-        self.question_document = question_document
         
     def get_data(self):
         return self.question_document
+
+
+    def parse_all_answers(self, url=None):
+
+        # if url is given, the url is fetch, otherwise we use the original html:
+        if url:
+            soup = self.fetch_url(url)
+        else:
+            soup = self.soup
+
+        # Parse answers:
+        pa = answer_parser.parse_answers(soup)
+        answers = pa.get_answer_data()
+
+        # if we know who asked the question update with the name:
+        if self.user:
+            for answer in answers:
+                if answer['USER']['USER'] == 'kerdezo_dummy_user':
+                    answer['USER']['USER'] = self.user
+
+        # If there's a next page, go there:
+        next_page_url = pa.get_next_page()
+        if next_page_url:
+            answers += self.parse_all_answers(next_page_url)
+
+        return answers
+
+
+    @staticmethod
+    def fetch_url(url):
+       return download_page.download_page(url) 
 
