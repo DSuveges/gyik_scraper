@@ -126,12 +126,11 @@ class parse_answers(object):
         try:
             pages = self.soup.find('div', class_='oldalszamok')
             lastpage_url = pages.find('a', string="❯").get('href')
-            lastpage_url = f'https://www.gyakorikerdesek.hu{lastpage_url}'
-            print(lastpage_url)
-        except:
-            lastpage_url = None
+            return f'https://www.gyakorikerdesek.hu{lastpage_url}'
 
-        return lastpage_url
+        except:
+            return None
+
 
 
     def get_answer_data(self):
