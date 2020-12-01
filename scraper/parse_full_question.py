@@ -20,14 +20,14 @@ class retrieve_question(object):
         self.user = self.question_document['USER']['USER']
 
         # Parsing answers:
-        self.question_document['ANSWERS'] = self.parse_all_answers()
+        self.question_document['ANSWERS'] = self.parse_answers()
 
         
     def get_data(self):
         return self.question_document
 
 
-    def parse_all_answers(self, url=None):
+    def parse_answers(self, url=None):
 
         # if url is given, the url is fetch, otherwise we use the original html:
         if url:
@@ -46,9 +46,8 @@ class retrieve_question(object):
                     answer['USER']['USER'] = self.user
 
         # If there's a next page, go there:
-        next_page_url = pa.get_next_page()
-        if next_page_url:
-            answers += self.parse_all_answers(next_page_url)
+        if pa.get_next_page():
+            answers += self.parse_answers(pa.get_next_page())
 
         return answers
 
