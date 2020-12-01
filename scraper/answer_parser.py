@@ -48,6 +48,9 @@ class parse_answers(object):
                 'ANSWER_PERCENT' : answer_percent
             })
 
+        # Parsing last page:
+        self.next_page = self.find_next_page()
+
 
     @staticmethod
     def _parse_text(row, answer_id):
@@ -110,6 +113,25 @@ class parse_answers(object):
             user_name = None
 
         return user_name
+
+
+    def get_next_page(self):
+        return(self.next_page)
+
+
+    def find_next_page(self):
+        """
+        Returns an url or None depending if the the page has a next page link:
+        """
+        try:
+            pages = self.soup.find('div', class_='oldalszamok')
+            lastpage_url = pages.find('a', string="❯").get('href')
+            lastpage_url = f'https://www.gyakorikerdesek.hu{lastpage_url}'
+            print(lastpage_url)
+        except:
+            lastpage_url = None
+
+        return lastpage_url
 
 
     def get_answer_data(self):
