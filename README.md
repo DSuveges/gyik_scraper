@@ -11,18 +11,22 @@ Finally the code is getting into shape. User can decide to fetch all questions f
 ```bash
 python gyik_scraper.py --database <str> \
             --category <str> \
-            --startpage <int> \
-            --endpage <int> \
-            --directQuestion <str>
+            --subCategory <str> \
+            --startPage <int> \
+            --endPage <int> \
+            --directQuestion <str> \
+            --logFile <str>
 ```
 
 ### where
 
 * **database**: mandatory option, sqlite database file. If not exists, the script creates.
 * **category**: mandatory option. Main GyIK category (eg. `tudomanyok`).
-* **startpage**: optional. First page of questions to load. Default: 0.
+* **subCategory**: optionally the subcategory within the category can be specified to narow down the scope.
+* **startPage**: optional. First page of questions to load. Default: 1.
 * **lastpage**: optional. The last page of questions to load. Default: last page of questions.
 * **directQuestion**: optional. If present only this question will be downloaded. Mostly for testing purposes.
+* **logFile**: optional filename for the logs. Default filename: scraper.log
 
 The start page has to be lower then last page. To retrieve all questions for a category these paremeters needs to be omitted.
 
@@ -30,8 +34,4 @@ The start page has to be lower then last page. To retrieve all questions for a c
 
 ![db schema](db_tools/schema.png)
 
-## TODO
-
-* A test QC on a larger chunk of downloaded data.
-* Integrate Codacy, Travis for code quality measure.
 

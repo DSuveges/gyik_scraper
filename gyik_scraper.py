@@ -79,7 +79,7 @@ def __main__():
 
     parser = argparse.ArgumentParser(description="This script fetches data from http://gyakorikerdesek.hu and feeds into an SQLite database.")
     parser.add_argument('--category', type=str, help='Main category. Mandatory', required = True)
-    parser.add_argument('--startPage', type=int, help='Start page of the question list', required = False, default = 0)
+    parser.add_argument('--startPage', type=int, help='Start page of the question list', required = False, default = 1)
     parser.add_argument('--endPage', type=int, help='end page of the question list.', required = False)
     parser.add_argument('--directQuestion', type = str, help ='direct link to scrape to a specific question', required = False)
     parser.add_argument('--database', type=str, help='Email address where the notification is sent.', required = True)
