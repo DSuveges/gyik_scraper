@@ -40,11 +40,11 @@ class parse_question(object):
         }
 
     def _parse_title(self):
-        title = self.soup.html.title.text
+        title = self.soup.find('div', class_='kerdes_fejlec').text
         return title
 
     def _parse_categories(self):
-        links = self.soup.findAll("div", class_="morzsamenu")[0].findChildren('a')
+        links = self.soup.find("div", class_="morzsamenu").findChildren('a')
         category = links[1].text
         subcategory = links[2].text
 
