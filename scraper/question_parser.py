@@ -28,19 +28,19 @@ class parse_question(object):
 
         # Compile into some return value:
         self.question_data = {
-            'URL' : question_URL,
-            'GYIK_ID' : ID_match.group(1),
-            'TITLE' : title,
-            'CATEGORY' : categories[0],
-            'SUBCATEGORY' : categories[1],
-            'QUESTION' : text,
-            'QUESTION_DATE' : parser_helper.process_date(raw_date),
-            'KEYWORDS' : keywords,
-            'USER' : {'USER' : user, 'USER_PERCENT' : None}
+            'URL': question_URL,
+            'GYIK_ID': ID_match.group(1),
+            'TITLE': title,
+            'CATEGORY': categories[0],
+            'SUBCATEGORY': categories[1],
+            'QUESTION': text,
+            'QUESTION_DATE': parser_helper.process_date(raw_date),
+            'KEYWORDS': keywords,
+            'USER': {'USER': user, 'USER_PERCENT': None}
         }
 
     def _parse_title(self):
-        title = self.soup.find('div', class_='kerdes_fejlec').text
+        title = self.soup.find('div', class_='kerdes_fejlec').find('h1').text
         return title
 
     def _parse_categories(self):
