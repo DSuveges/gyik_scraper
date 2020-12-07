@@ -47,37 +47,45 @@ def download_page(URL, session = None):
     '''
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
-    time.sleep(10)
+    time.sleep(14)
 
-    # If no session is provided we generate session:
-    session = requests_retry_session()
 
-    # client = ScraperAPIClient(api_key)
+    while True:
+        try:
+            # If no session is provided we generate session:
+            session = requests_retry_session()
+
+            # client = ScraperAPIClient(api_key)
+            
+            
+            # URL to downloads:
+            try:
+                # response = client.get(url = URL)
+                response = session.get(URL)
+            except ConnectionError:
+                logger.warning(f'request failed for URL: {URL}')
+
+            # Returned html document:
+            html = response.text
+
+            # Html encoded into utf8:
+            uhtml = UnicodeDammit(html)
+
+            # Creating soup:
+            soup = BeautifulSoup(uhtml.unicode_markup, features="html.parser")
+
+            # If captcha is triggered, there's not much we can do, we exit:
+            if soup.find('title').text == 'Captcha!':
+                logger.warning(f"We have triggered the captcha... ({URL})")
+                raise ValueError(f'While fetching URL ({URL}) captcha was triggered. Exiting.')
+                
+            # Upon successful retrieval, we are breaking out the while loop and return the page:
+            return soup
+
+        except:
+            # After the failed attempt the script waits 30 seconds and try again:
+            time.sleep(30)
+            continue
+
     
-    
-    # URL to downloads:
-    try:
-        # response = client.get(url = URL)
-        response = session.get(URL)
-    except ConnectionError:
-        logger.warning(f'request failed for URL: {URL}')
-
-    # Returned html document:
-    html = response.text
-
-    # Html encoded into utf8:
-    uhtml = UnicodeDammit(html)
-
-    # Creating soup:
-    soup = BeautifulSoup(uhtml.unicode_markup, features="html.parser")
-
-    try:
-        if soup.find('title').text == 'Captcha!':
-            logger.warning(f"We have triggered the captcha... ({URL})")
-    except AttributeError:
-        raise ValueError(f'The provided URL ({URL}) cound not retrieve data. Category or subcategory might be wrong...')
-
-
-    # check if the returned value contain the html.
-    return soup
     
