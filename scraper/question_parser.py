@@ -57,7 +57,7 @@ class parse_question(object):
             for kulcsszo in self.soup.find('div', class_ = 'kerdes_kulcsszo').findAll('a'):
                 keywords.append(kulcsszo.text.replace('#',''))
         except:
-            pass
+            return keywords
 
         return keywords
 
