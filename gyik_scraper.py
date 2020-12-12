@@ -47,7 +47,7 @@ class scraper(object):
 
             # Testing if question is loaded into the database:
             match = re.search('__(\d+)-',URL)
-            if self.test_question(match[1]): 
+            if self.test_question(match[1]):
                 logging.warning(f'Question is already in the database: {URL}')
                 continue
 
@@ -133,7 +133,7 @@ def __main__():
         sys.exit()
 
     logging.info('Fetching data started...')
-    
+
     # Looping through all defined pages:
     for page in range(startPage, endPage+1):
 
@@ -153,6 +153,6 @@ def __main__():
 
 
 if __name__ == '__main__':
-    
+
     __main__()
 

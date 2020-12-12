@@ -1,6 +1,5 @@
 import logging
 import requests
-import random
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -8,12 +7,9 @@ from requests.packages.urllib3.util.retry import Retry
 import time
 from bs4 import BeautifulSoup, UnicodeDammit
 
-# from scraper_api import ScraperAPIClient
+# from scraper_api import ScraperAPIClient # If using scraperAPI
 logger = logging.getLogger('__main__')
 
-
-# Problematic questions:
-## https://www.gyakorikerdesek.hu/szamitastechnika__egyeb-kerdesek__10250568-bluetooth-usb-autoradio-hogyan
 
 # code from: https://www.peterbe.com/plog/best-practice-with-retries-with-requests
 def requests_retry_session(
@@ -55,12 +51,11 @@ def download_page(URL, session = None):
             # If no session is provided we generate session:
             session = requests_retry_session()
 
-            # client = ScraperAPIClient(api_key)
-            
-            
+            # client = ScraperAPIClient(api_key) # If using screapAPI
+
             # URL to downloads:
             try:
-                # response = client.get(url = URL)
+                # response = client.get(url = URL) # If using screapAPI
                 response = session.get(URL)
             except ConnectionError:
                 logger.warning(f'request failed for URL: {URL}')
@@ -86,6 +81,3 @@ def download_page(URL, session = None):
             # After the failed attempt the script waits 30 seconds and try again:
             time.sleep(30)
             continue
-
-    
-    

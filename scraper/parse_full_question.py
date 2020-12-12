@@ -2,7 +2,6 @@
 from scraper import download_page
 from scraper import question_parser
 from scraper import answer_parser
-from scraper import parser_helper
 
 class retrieve_question(object):
 
@@ -22,7 +21,7 @@ class retrieve_question(object):
         # Parsing answers:
         self.question_document['ANSWERS'] = self.parse_answers()
 
-        
+
     def get_data(self):
         return self.question_document
 
@@ -54,5 +53,5 @@ class retrieve_question(object):
 
     @staticmethod
     def fetch_url(url):
-       return download_page.download_page(url) 
+       return download_page.download_page(url)
 
