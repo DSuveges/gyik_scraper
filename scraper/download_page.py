@@ -69,11 +69,14 @@ def download_page(URL, session = None):
             # Creating soup:
             soup = BeautifulSoup(uhtml.unicode_markup, features="html.parser")
 
-            # If captcha is triggered, there's not much we can do, we exit:
+            # If certain protection mechanism is triggered we won't return anything:
             if soup.find('title').text == 'Captcha!':
                 logger.warning(f"We have triggered the captcha... ({URL})")
                 raise ValueError(f'While fetching URL ({URL}) captcha was triggered. Exiting.')
-                
+            elif soup.find('title').text == 'Ideiglenes letiltás!':
+                logger.warning(f'We are termporarily banned to access any page.')
+                raise ValueError(f'While fetching URL ({URL}) we got banned termporarily. Exiting.')
+
             # Upon successful retrieval, we are breaking out the while loop and return the page:
             return soup
 

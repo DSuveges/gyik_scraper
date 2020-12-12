@@ -1,11 +1,8 @@
-# from bs4 import BeautifulSoup, UnicodeDammit
+
 import datetime
 import re
 import logging
 
-"""
-In this module there are a series of functions to help the parsing process.
-"""
 
 logger = logging.getLogger('__main__')
 
@@ -46,7 +43,7 @@ def get_last_question_page(soup):
         last_page = URLs[-1].split('-')[-1]
         return int(last_page)
     except IndexError:
-        None
+        return None
 
 
 
