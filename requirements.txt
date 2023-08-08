@@ -3,8 +3,7 @@ beautifulsoup4==4.8.2
 certifi==2023.7.22
 cffi==1.13.2
 chardet==3.0.4
-cryptography==41.0.3
-gyik-scraper==0.1.dev0
+cryptography
 idna==2.8
 pycparser==2.19
 pyOpenSSL==19.1.0

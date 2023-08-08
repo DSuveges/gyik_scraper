@@ -1,4 +1,3 @@
-# from bs4 import BeautifulSoup, UnicodeDammit
 from scraper import download_page
 from scraper import question_parser
 from scraper import answer_parser
@@ -21,10 +20,8 @@ class retrieve_question(object):
         # Parsing answers:
         self.question_document['ANSWERS'] = self.parse_answers()
 
-
     def get_data(self):
         return self.question_document
-
 
     def parse_answers(self, url=None):
 
@@ -50,8 +47,6 @@ class retrieve_question(object):
 
         return answers
 
-
     @staticmethod
     def fetch_url(url):
-       return download_page.download_page(url)
-
+        return download_page.download_page(url)

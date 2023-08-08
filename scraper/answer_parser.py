@@ -4,7 +4,7 @@ import re
 
 class parse_answers(object):
 
-    def __init__(self,soup):
+    def __init__(self, soup):
         """
         This class parses all answer related data.
 

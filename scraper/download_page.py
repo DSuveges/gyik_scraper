@@ -1,15 +1,19 @@
 import logging
-import requests
 
+from requests import Session
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 import time
 from bs4 import BeautifulSoup, UnicodeDammit
 
+from faker import Faker
+
 # from scraper_api import ScraperAPIClient # If using scraperAPI
 logger = logging.getLogger('__main__')
 
+# Using a random user agent all the time
+faker = Faker()
 
 # code from: https://www.peterbe.com/plog/best-practice-with-retries-with-requests
 def requests_retry_session(
@@ -19,7 +23,7 @@ def requests_retry_session(
         session=None,
     ):
 
-    session = session or requests.Session()
+    session = Session()
     retry = Retry(
         total=retries,
         read=retries,
@@ -30,28 +34,26 @@ def requests_retry_session(
     adapter = HTTPAdapter(max_retries=retry)
     session.mount('http://', adapter)
     session.mount('https://', adapter)
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Szopj le haver. AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'})
+    session.headers.update({'User-Agent': faker.user_agent()})
     return session
 
 
-def download_page(URL, session = None):
-    '''
-    This function downloads a webpage defined in the submitted URL. Given pages UTF-8 encoded, characters could be messed up.
+def download_page(URL, session=None):
+    '''This function downloads a webpage defined in the submitted URL.
+
+    Given pages UTF-8 encoded, characters could be messed up.
     TODO:
         1. If empty page is retreaved, handle properly.
         2. If something wrong handle it properly.
     '''
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
-    time.sleep(14)
-
+    time.sleep(3)
 
     while True:
         try:
             # If no session is provided we generate session:
             session = requests_retry_session()
-
-            # client = ScraperAPIClient(api_key) # If using screapAPI
 
             # URL to downloads:
             try:
@@ -61,7 +63,7 @@ def download_page(URL, session = None):
                 logger.warning(f'request failed for URL: {URL}')
 
             # Returned html document:
-            html = response.text
+            html = response.text.encode('utf-8', 'replace').decode()
 
             # Html encoded into utf8:
             uhtml = UnicodeDammit(html)
