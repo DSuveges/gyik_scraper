@@ -10,7 +10,7 @@ import re
 import sys
 import os
 import logging
-
+from typing import Tuple
 
 class scraper(object):
     """
@@ -35,12 +35,31 @@ class scraper(object):
         and parse data and add to databasel
         """
 
-        # Test input:
+        # Test input: <- This is not needed.
         if not isinstance(URL_list, list):
             logging.error(f'scraper.get_all_questions requires a list input. {type(URL_list)} is given.')
             logging.error('Input data:\n')
             logging.error(URL_list)
             raise TypeError
+
+
+
+        '''
+        c = conn.conn.execute(get_answer_count_sql, {'gyik_id' : question[2]})
+        counts = c.fetchone()
+
+        # Handling output:
+        if counts[1] is None:
+            print(f'Question ID: {question[2]} is new!')
+            # Ingest_logic
+        elif counts[0] == question[1]:
+            print(f'Question ID: {question[2]} already ingested. Nothing to do.')
+            # Continue
+        else:
+            print(f'Question ({question[2]}) is already ingested but new answers arrived ({counts[0]} vs {question[1]})!')
+            # Delete logic
+            # Ingest logic
+        '''
 
         # Looping through URLs:
         for URL in URL_list:
@@ -58,13 +77,16 @@ class scraper(object):
             # Load data:
             self.ql.add_question(data)
 
+    def test_answer_count(self, GYIK_ID: int) -> Tuple[int, int]:
+        """Get the number of answers for a given question based on GYIK_ID.
 
-    def test_question(self,GYIK_ID):
+        Args:
+            GYIK_ID int: GYIK identifier of a question
+
+        return:
+            Tuple where first element is the number of answers the second is the gyik id
         """
-        Testing if a questin is already loaded into the database or not.
-        return: bool
-        """
-        return self.ad_obj.test_question(GYIK_ID)
+        return self.ad_obj.get_answer_count(GYIK_ID)
 
 
 def __main__():
