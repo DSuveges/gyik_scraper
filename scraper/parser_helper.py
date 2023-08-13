@@ -1,37 +1,69 @@
-import datetime
+"""Functions to help the html parsing."""
+from __future__ import annotations
+
 import logging
 import re
+from datetime import date, datetime, timedelta
+from typing import TYPE_CHECKING
 
 logger = logging.getLogger("__main__")
 
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup, Tag
 
-def get_all_questions(soup):
-    """
-    This function retrieves all question URLs on one list page.
 
-    param: soup - beautifulsoup boject.
+def get_all_questions(soup) -> list:
+    """Retrieve all question URLs on one list page.
+
+    param:
+        soup (beautifulsoup): .
     Returns: question_urls (list): all the links to questions.
     """
-    questions_list = soup.findChildren("div", class_="kerdeslista_szoveg")
-    questions_urls = []
-    for question in questions_list:
-        try:
-            for a in question.find_all("a"):
-                url = a.get("href")
-                if re.match(".+__\d+-.+", url):
-                    questions_urls.append("https://www.gyakorikerdesek.hu" + url)
-        except AttributeError:
-            # All answers on one page
-            continue
-    return questions_urls
+
+    def _parse_count(count: Tag) -> int:
+        return int(count.text)
+
+    def _parse_link(question: Tag) -> str | None:
+        url = question.find("a").get("href")
+        if re.match(r".+__\d+-.+", url):
+            return "https://www.gyakorikerdesek.hu" + url
+        else:
+            return None
+
+    def _parse_gyik_id(question: Tag) -> str | None:
+        url = question.find("a").get("href")
+        gyik_ids = re.search(r".+__(\d+)-.+", url)
+        if gyik_ids:
+            return gyik_ids[1]
+        else:
+            return None
+
+    return list(
+        zip(
+            [
+                _parse_link(tag)
+                for tag in soup.findChildren("div", class_="kerdeslista_szoveg")
+            ],
+            [
+                _parse_count(tag)
+                for tag in soup.findChildren("div", class_="kerdeslista_valasz")
+            ],
+            [
+                _parse_gyik_id(tag)
+                for tag in soup.findChildren("div", class_="kerdeslista_szoveg")
+            ],
+        )
+    )
 
 
-def get_last_question_page(soup):
-    """
-    This function returns the last page of question in a category
+def get_last_question_page(soup: BeautifulSoup) -> int | None:
+    """This function returns the last page of question in a category.
 
-    param: soup - beautifulsoup boject.
-    Returns: last_page (int)
+    args:
+        soup (BeautifulSoup) - html parsed by beautifulsoup.
+
+    Returns:
+        int - last page of the category
     """
     try:
         table_footer = soup.findChildren("div", class_="oldalszamok")[1]
@@ -45,12 +77,14 @@ def get_last_question_page(soup):
         return None
 
 
-def get_last_answer_page(soup):
-    """
-    This function returns the last page of answer for a question
+def get_last_answer_page(soup: BeautifulSoup) -> int | None:
+    """This function returns the last page of answer for a question.
 
-    param: soup - beautifulsoup boject.
-    Returns: last_page (int)
+    Args:
+        soup - beautifulsoup boject.
+
+    Returns:
+        number of last_page
     """
     footer = soup.findChild("td", class_="valaszok")
 
@@ -67,13 +101,15 @@ def get_last_answer_page(soup):
     return int(last_page_link.split("-")[-1])
 
 
-def process_date(date_string):
-    """
-    The site has a very weird data/time notation. This function maps it to
-    standard datetime object.
+def process_date(date_string: str) -> datetime | None:
+    """Map date to standard datetime object.
 
-    param: string
-    returns: datetime of object of the input date
+    The site has a very weird data/time notation.
+
+    Args:
+        date_string (str): captured date/time annotation
+    returns:
+        datetime of object of the input date
     """
 
     # Dictionary to map Hungarian abbreviation of months to English:
@@ -100,9 +136,9 @@ def process_date(date_string):
     date_string = date_string.strip()
 
     # Processing unusual date annotation:
-    today = datetime.date.today()  # today
-    yesterday = today - datetime.timedelta(1)  # yesterday
-    day_b_yesterday = today - datetime.timedelta(2)  # day before yesterday
+    today = date.today()  # today
+    yesterday = today - timedelta(1)  # yesterday
+    day_b_yesterday = today - timedelta(2)  # day before yesterday
 
     if "tegnapelőtt" in date_string:
         date_string = date_string.replace(
@@ -118,9 +154,9 @@ def process_date(date_string):
 
     # trying to translate date string to datetime object:
     try:
-        date_obj = datetime.datetime.strptime(date_string, "%Y. %b. %d. %H:%M")
+        date_obj = datetime.strptime(date_string, "%Y. %b. %d. %H:%M")
     except ValueError:
         date_string = "{}. {}".format(today.year, date_string)
-        date_obj = datetime.datetime.strptime(date_string, "%Y. %b. %d. %H:%M")
+        date_obj = datetime.strptime(date_string, "%Y. %b. %d. %H:%M")
 
     return date_obj

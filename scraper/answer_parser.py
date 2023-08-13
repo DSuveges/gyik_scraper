@@ -3,7 +3,7 @@ import re
 from scraper import parser_helper
 
 
-class parse_answers(object):
+class parse_answers:
     def __init__(self, soup):
         """
         This class parses all answer related data.

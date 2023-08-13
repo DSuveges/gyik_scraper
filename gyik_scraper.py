@@ -9,6 +9,8 @@ from db_tools.db_connection import db_connection
 from db_tools.db_utils import db_handler, question_loader
 from scraper import download_page, parse_full_question, parser_helper
 
+from scraper.parser_helper import get_last_question_page
+
 if TYPE_CHECKING:
     from argparse import Namespace
 
@@ -201,7 +203,7 @@ if __name__ == "__main__":
 
     # If the end page is not defined, we fetch the last page from the page list:
     if not args.endPage:
-        endPage = int(parser_helper.get_last_question_page(test_page))
+        endPage = int(get_last_question_page(test_page))
     else:
         endPage = int(args.endPage)
 
