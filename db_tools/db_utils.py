@@ -174,12 +174,18 @@ class db_handler:
         else:
             logger.warning("Question/keyword link already exist.")
 
-    def add_user(self: db_handler, user: str, percent: float) -> int:
-        """
-        Get user ID or adds to db. Also updates percent if
-        missing in db, but in the query
-        """
+    def add_user(self: db_handler, user: str, percent: float) -> int | None:
+        """Get user ID or adds to db if not aready in the db.
 
+        Also updates percent if missing in db, but in the query. If
+
+        Args:
+            self (db_handler, user)
+            user (str): user name
+            percent (float): percent value of the usefulness of the answers
+        Returns:
+            int: identifier of the user in the database.
+        """
         # Fetch data from db:
         self.cursor.execute(self.get_user_sql, {"user": user})
 
@@ -202,11 +208,16 @@ class db_handler:
             ID = self.cursor.lastrowid
 
         # Return with the ID
-        return ID
+        return int(ID)
 
-    def add_keyword(self, keyword):
+    def add_keyword(self: db_handler, keyword: str) -> int | None:
         """Testing if keyword exists. If no, adds to database.
-        Returns keyword ID.
+
+        Args:
+            self (db_handler)
+            keyword (str): keyword parsed from html
+        Returns:
+            str keyword ID in the database.
         """
         # None values cannot be added:
         if not keyword:
@@ -216,7 +227,7 @@ class db_handler:
         # Fetch data from db:
         self.cursor.execute(self.get_keyword_sql, {"keyword": keyword})
 
-        # The user is in the database:
+        # The keyword is in the database:
         try:
             # Parsing row:
             (ID, _) = self.cursor.fetchone()
@@ -229,19 +240,23 @@ class db_handler:
         # Return with the ID
         return ID
 
-    def test_question(self, gyik_id):
-        """
-        Based on gyik ID of the question, we tests if it is already in the database:
-        """
+    def test_question(self: db_handler, gyik_id: int) -> bool:
+        """Tests if question is already in the database by GYIK_ID.
 
+        Args:
+            self (db_handler)
+            gyik_id (str): GYIK identifier of a question
+        Returns:
+            bool: True if question is already in the database, False if not
+        """
         # Fetch data from db:
         self.cursor.execute(self.question_lookup_sql, {"gyik_id": gyik_id})
 
         # The question is in the database:
         if self.cursor.fetchone():
-            return 1
+            return True
         else:
-            return 0
+            return False
 
     def get_answer_count(self, gyik_id):
         # Fetch data from db:
@@ -253,11 +268,15 @@ class db_handler:
         else:
             return 0
 
-    def add_question(self, question_data):
-        """
-        This methods adds a new row to the question data
-        """
+    def add_question(self: db_handler, question_data: dict) -> int | None:
+        """Add a new row to the question table.
 
+        Args:
+            self (db_handler)
+            question_data (dict): parsed data organized into a dictionary and added
+        Returns:
+            int identifier of the newly inserted question, None if question is already in the database
+        """
         # Test if data is in a proper type:
         if not isinstance(question_data, dict):
             raise TypeError("Question data must be a dictionary")
@@ -296,8 +315,13 @@ class db_handler:
             "added_date": datetime.now(),
         }
         self.cursor.execute(self.add_question_sql, d)
+        question_id = self.cursor.lastrowid
 
-        return self.cursor.lastrowid
+        # Raising type error if insertion got failed:
+        if not isinstance(question_id, int):
+            raise TypeError(f"Failed to insert new row into database: {question_id}")
+
+        return question_id
 
     def test_answer(self, gyik_id):
         """
