@@ -90,6 +90,9 @@ class db_handler:
         )
     """
 
+    # Look up an answer in the database based on the gyik id:
+    get_answer_sql = """SELECT * FROM ANSWER WHERE GYIK_ID = :gyik_id"""
+
     # Getting the answer count for a given question, submitted by other than OP:
     get_answer_count_sql = """
         SELECT
@@ -208,9 +211,13 @@ class db_handler:
             ID = self.cursor.lastrowid
 
         # Return with the ID
+        if not isinstance(ID, int):
+            raise TypeError(
+                f"Could not insert new user into database: {user}, returned id: {ID}"
+            )
         return int(ID)
 
-    def add_keyword(self: db_handler, keyword: str) -> int | None:
+    def add_keyword(self: db_handler, keyword: str) -> int:
         """Testing if keyword exists. If no, adds to database.
 
         Args:
@@ -221,8 +228,7 @@ class db_handler:
         """
         # None values cannot be added:
         if not keyword:
-            logger.warning("Keyword must be specified!")
-            return None
+            raise ValueError("Keyword must be specified!")
 
         # Fetch data from db:
         self.cursor.execute(self.get_keyword_sql, {"keyword": keyword})
@@ -236,6 +242,11 @@ class db_handler:
         except TypeError:
             self.cursor.execute(self.add_keyword_sql, {"keyword": keyword})
             ID = self.cursor.lastrowid
+
+        if not isinstance(ID, int):
+            raise ValueError(
+                f"Could not insert keyword ({keyword}) into the database. Id: {ID}"
+            )
 
         # Return with the ID
         return ID
@@ -258,17 +269,26 @@ class db_handler:
         else:
             return False
 
-    def get_answer_count(self, gyik_id):
+    def get_answer_count(self: db_handler, gyik_id: int) -> int | None:
+        """Tests if question is already in the database by GYIK_ID.
+
+        Args:
+            self (db_handler)
+            gyik_id (str): GYIK identifier of a question
+        Returns:
+            int | None: Then number of answers are returned or None if the question is not in database
+        """
         # Fetch data from db:
         self.cursor.execute(self.question_lookup_sql, {"gyik_id": gyik_id})
+        (count, question_id) = self.cursor.fetchone()
 
-        # The question is in the database:
-        if self.cursor.fetchone():
-            return 1
+        # Is the id value none:
+        if question_id is None:
+            return None
         else:
-            return 0
+            return count
 
-    def add_question(self: db_handler, question_data: dict) -> int | None:
+    def add_question(self: db_handler, question_data: dict) -> int:
         """Add a new row to the question table.
 
         Args:
@@ -295,13 +315,6 @@ class db_handler:
             if field not in question_data:
                 raise KeyError("Question data must contain key: {}".format(field))
 
-        # Test if this question is already in the database:
-        if self.test_question(question_data["GYIK_ID"]):
-            logger.warning(
-                f'This question id ({question_data["GYIK_ID"]}) has already been added to the database! Skipping'
-            )
-            return None
-
         # Submit query:
         d = {
             "gyik_id": question_data["GYIK_ID"],
@@ -323,21 +336,25 @@ class db_handler:
 
         return question_id
 
-    def test_answer(self, gyik_id):
-        """
-        Test if the gyik ID of the answer exist
-        """
+    def test_answer(self: db_handler, gyik_id: int) -> bool:
+        """Test if the gyik ID of the answer exist.
 
+        Args:
+            self (db_handler)
+            gyik_id (int): integer value of the gyik identifer of the answer
+        Returns:
+            boolean indicating if the answer is already there (True) or not (False)
+        """
         # Fetch data from db:
         self.cursor.execute(self.get_answer_sql, {"gyik_id": gyik_id})
 
         # The question is in the database:
         if self.cursor.fetchone():
-            return 1
+            return True
         else:
-            return 0
+            return False
 
-    def add_answer(self, answer_data):
+    def add_answer(self: db_handler, answer_data: dict) -> int | None:
         """
         This methods adds a new row to the question data
         """
@@ -379,37 +396,54 @@ class db_handler:
 
         return self.cursor.lastrowid
 
-    def commit(self):
+    def commit(self: db_handler) -> None:
+        """Commit changes in the database.
+
+        Args:
+            self (db_handler)
+        """
         self.conn.commit()
 
-    def rollback(self):
+    def rollback(self: db_handler) -> None:
+        """Roll back changes in the database.
+
+        Args:
+            self (db_handler)
+        """
         self.conn.rollback()
 
-    def close(self):
+    def close(self: db_handler) -> None:
+        """Close connection to the databse.
+
+        Args:
+            self (db_handler)
+        """
         self.conn.close()
 
 
-class question_loader(object):
-    """
-    This class loads data of a full question (question, keywords, answers etc) into the database.
+class question_loader:
+    """This class loads data of a full question (question, keywords, answers etc) into the database.
+
     There is a very specific order in which the data can be loaded into the database.
     """
 
-    def __init__(self, db_handler):
-        """
-        Initialize object with db_handler. When data is subsequently added, this handler
-        is going to be called.
-        """
+    def __init__(self: question_loader, db_handler: db_handler) -> None:
+        """Initialize object with db_handler. When data is subsequently added, this handler is going to be called.
 
+        Args:
+            self (question_loader)
+            db_handler (db_handler): The `db_handler`
+        """
         # Storing db_handler:
         self.db_obj = db_handler
 
-    def add_question(self, question_data):
-        """
-        Once all components of the question is parsed and the proper data structure built,
-        we upload the data.
-        """
+    def add_question(self: question_loader, question_data: dict) -> None:
+        """Once all components of the question is parsed and the proper data structure built load to database.
 
+        Args:
+            self (question_loader)
+            question_data (dict): all data captrured for a question (eg. text and answers) modelled as a dictionary
+        """
         # 1. Adding user - person who asked the question is often not available. If yes, we add to the db.
         if not question_data["USER"]["USER"]:
             question_data["USER_ID"] = None
@@ -421,22 +455,23 @@ class question_loader(object):
         # 2. Add question
         question_id = self.db_obj.add_question(question_data)
 
-        # If question is already in the database, return
-        if not question_id:
-            return
-
         # Loop through all keywords:
         for keyword in question_data["KEYWORDS"]:
-            # 3. Add keywords
+            if not keyword or keyword is None or keyword == "":
+                continue
+
+            # Add keyword:
             keyword_id = self.db_obj.add_keyword(keyword)
 
-            # 4. Add links to keywords
+            # Add question links to keyword:
             self.db_obj.link_to_keyword(question_id, keyword_id)
 
         # Loop through all answers:
         for answer in question_data["ANSWERS"]:
+            # Adding question id as foreign key pointing to the question table:
             answer["QUESTION_ID"] = question_id
-            # 6. Add users
+
+            # Add users to answer object:
             if answer["USER"]["USER"]:
                 answer["USER_ID"] = self.db_obj.add_user(
                     answer["USER"]["USER"], answer["USER"]["USER_PERCENT"]
@@ -444,7 +479,7 @@ class question_loader(object):
             else:
                 answer["USER_ID"] = None
 
-            # 5. Add answers
+            # Add answer to the database:
             self.db_obj.add_answer(answer)
 
         # The changes are only committed after all uploads were successfully completed.
