@@ -12,12 +12,14 @@ if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
 
 
-def get_all_questions(soup) -> list:
+def get_all_questions(soup: BeautifulSoup) -> list:
     """Retrieve all question URLs on one list page.
 
     param:
         soup (beautifulsoup): .
-    Returns: question_urls (list): all the links to questions.
+
+    Returns:
+        question_urls (list): all the links to questions.
     """
 
     def _parse_count(count: Tag) -> int:
@@ -56,7 +58,7 @@ def get_all_questions(soup) -> list:
     )
 
 
-def get_last_question_page(soup: BeautifulSoup) -> int | None:
+def get_last_question_page(soup: BeautifulSoup) -> int:
     """This function returns the last page of question in a category.
 
     args:
@@ -65,23 +67,25 @@ def get_last_question_page(soup: BeautifulSoup) -> int | None:
     Returns:
         int - last page of the category
     """
-    try:
-        table_footer = soup.findChildren("div", class_="oldalszamok")[1]
-        URLs = [a_tag.get("href") for a_tag in table_footer.findAll("a")]
-        if len(URLs) == 0:
-            logger.warning("Failed to retrieve last page.")
-            return None
-        last_page = URLs[-1].split("-")[-1]
-        return int(last_page)
-    except IndexError:
-        return None
+    # Getting page numbers:
+    table_footer = soup.findChildren("div", class_="oldalszamok")[1]
+
+    # The page numbers are expected to be stored in the "oldalszamok" div:
+    assert isinstance(table_footer, list) and len(table_footer) > 1
+
+    # Extracting URLs:
+    URLs = [a_tag.get("href") for a_tag in table_footer[1].findAll("a")]
+
+    assert len(URLs) > 0, "Page numbers were failed to pull"
+
+    return int(URLs[-1].split("-")[-1])
 
 
 def get_last_answer_page(soup: BeautifulSoup) -> int | None:
     """This function returns the last page of answer for a question.
 
     Args:
-        soup - beautifulsoup boject.
+        soup (beautifulsoup): parsed html page.
 
     Returns:
         number of last_page
@@ -111,7 +115,6 @@ def process_date(date_string: str) -> datetime | None:
     returns:
         datetime of object of the input date
     """
-
     # Dictionary to map Hungarian abbreviation of months to English:
     month_mapper = {
         "febr": "feb",
