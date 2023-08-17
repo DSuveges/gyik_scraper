@@ -26,7 +26,7 @@ class ParseAnswers:
         self.soup = soup
         self.answer_data = []
 
-        # Looping through the table and parse all questions:
+        # Looping through the table and parse all answers:
         for answer in self.soup.findAll(
             "div", id=lambda x: x is not None and x.startswith("valasz-")
         ):

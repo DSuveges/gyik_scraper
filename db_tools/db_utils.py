@@ -392,7 +392,7 @@ class db_handler:
         # Test if this question is already in the database:
         if self.test_answer(answer_data["GYIK_ID"]):
             logger.warning(
-                f'This question ({answer_data["GYIK_ID"]}) has already been added to the database! Skipping'
+                f'Answer ({answer_data["GYIK_ID"]}) has already been added to the database! Skipping'
             )
             return None
 

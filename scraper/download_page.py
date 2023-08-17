@@ -46,7 +46,7 @@ def download_page(URL, session=None):
     """
 
     # Let's wait to avoid being banned (0.1 leads to ban already).
-    time.sleep(3)
+    time.sleep(10)
 
     while True:
         try:

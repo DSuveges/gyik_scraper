@@ -64,7 +64,7 @@ class GyikScraper(object):
             question_list (list): list of questions by their URL to scrape
         """
         # Looping through the list of URLs:
-        for question_url, gyik_id, answer_count in question_list:
+        for question_url, answer_count, gyik_id in question_list:
             # 1. Get counts from database:
             answer_count_db = self.db_handler.get_answer_count(gyik_id)
             # 2. The question is new, scrape question:
@@ -129,6 +129,8 @@ def __main__(
 
         # Get URLs for all questions:
         questions = get_all_questions(soup)
+        # print(questions)
+        # sys.exit()
 
         # Retrieve all question data:
         scraper_object.scrape_question_list(questions)
@@ -147,9 +149,7 @@ def parse_arguments() -> Namespace:
     parser = argparse.ArgumentParser(
         description="This script fetches data from http://gyakorikerdesek.hu and feeds into an SQLite database."
     )
-    parser.add_argument(
-        "--category", type=str, help="Main category. Mandatory", required=True
-    )
+    parser.add_argument("--category", type=str, help="Main category.", required=False)
     parser.add_argument(
         "--startPage",
         type=int,
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     # Set up logging:
     logging.basicConfig(
-        filename=args.logFile,
+        handlers=[logging.FileHandler("debug.log"), logging.StreamHandler()],
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
