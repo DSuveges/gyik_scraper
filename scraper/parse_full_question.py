@@ -7,7 +7,7 @@ class retrieve_question(object):
         self.url = URL
 
         # Parse question data:
-        pq = question_parser.parse_question(self.soup, URL)
+        pq = question_parser.ParseQuestion(self.soup, URL)
 
         # Parsing question related information:
         self.question_document = pq.get_question_data()
@@ -29,7 +29,7 @@ class retrieve_question(object):
             soup = self.soup
 
         # Parse answers:
-        pa = answer_parser.parse_answers(soup)
+        pa = answer_parser.ParseAnswers(soup)
         answers = pa.get_answer_data()
 
         # if we know who asked the question update with the name:

@@ -279,7 +279,7 @@ class db_handler:
             int | None: Then number of answers are returned or None if the question is not in database
         """
         # Fetch data from db:
-        self.cursor.execute(self.question_lookup_sql, {"gyik_id": gyik_id})
+        self.cursor.execute(self.get_answer_count_sql, {"gyik_id": gyik_id})
         (count, question_id) = self.cursor.fetchone()
 
         # Is the id value none:
@@ -287,6 +287,15 @@ class db_handler:
             return None
         else:
             return count
+
+    def drop_question(self: db_handler, gyik_id: str) -> None:
+        """Drop a question from the database based on gyik identifier of the question.
+
+        Args:
+            self (db_handler)
+            gyik_id (str): Gyik identifier of the question
+        """
+        self.cursor.execute(self.delete_question_sql, {"gyik_id": gyik_id})
 
     def add_question(self: db_handler, question_data: dict) -> int:
         """Add a new row to the question table.
@@ -355,8 +364,13 @@ class db_handler:
             return False
 
     def add_answer(self: db_handler, answer_data: dict) -> int | None:
-        """
-        This methods adds a new row to the question data
+        """Add a new row to the question data.
+
+        Args:
+            self (db_handler)
+            answer_data (dict): parsed answer data
+        Returns:
+            int for newly added answers.
         """
 
         # Test input data:
@@ -436,6 +450,8 @@ class question_loader:
         """
         # Storing db_handler:
         self.db_obj = db_handler
+
+        # Get anonymous OP user identifier:
 
     def add_question(self: question_loader, question_data: dict) -> None:
         """Once all components of the question is parsed and the proper data structure built load to database.

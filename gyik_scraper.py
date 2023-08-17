@@ -6,12 +6,12 @@ import logging
 import os
 import re
 import sys
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List
 
 from db_tools.db_connection import db_connection
 from db_tools.db_utils import db_handler, question_loader
 from scraper import download_page, parse_full_question, parser_helper
-from scraper.parser_helper import get_last_question_page
+from scraper.parser_helper import get_all_questions, get_last_question_page
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -20,83 +20,69 @@ if TYPE_CHECKING:
 URL = "https://www.gyakorikerdesek.hu"
 
 
-class scraper(object):
-    """This class orcestrates all three stages of the parser:
+class GyikScraper(object):
+    """This class orcestrates all three stages of the parser.
 
     1. fetching html from website.
     2. parse relevant information.
     3. Upload data to database.
     """
 
-    def __init__(self, connection: db_connection) -> None:
+    def __init__(self: GyikScraper, connection: db_connection) -> None:
         """Initialize by providing the database connection object. With the database object, a loader object is initialized.
 
         Args:
-            self (scraper)
+            self (GyikScraper)
             connection (db_connection): object with tools to interact with the database
         """
         self.db_handler = db_handler(connection.conn)
         self.question_loader = question_loader(self.db_handler)
 
-    def scrape_questions(self: scraper, URL_list: List[str]) -> None:
+    def scrape_question(self: GyikScraper, URL: str) -> None:
+        """Scrape a single question and add to the database without checking.
+
+        Args:
+            self (GyikScraper)
+            URL (str): URL pointing to the question
+        """
+        # Feth data:
+        retrieved_question = parse_full_question.retrieve_question(URL)
+
+        # Parse data:
+        parsed_data = retrieved_question.get_data()
+
+        # Add data to database:
+        self.question_loader.add_question(parsed_data)
+
+    def scrape_question_list(self: GyikScraper, question_list: List[tuple]) -> None:
         """Walk through a list of URLs pointing to question and parse data and add to database.
 
+        This method also checks if the question is already in the database or update is needed.
+
         Args:
-            self (scraper)
-            URL_list (list): list of questions by their URL to scrape
+            self (GyikScraper)
+            question_list (list): list of questions by their URL to scrape
         """
-        # Test input: <- This is not needed.
-        if not isinstance(URL_list, list):
-            logging.error(
-                f"scraper.get_all_questions requires a list input. {type(URL_list)} is given."
-            )
-            logging.error("Input data:\n")
-            logging.error(URL_list)
-            raise TypeError
-
-        answer_count = self.db_obj.get_answer_count()
-        """
-        c = conn.conn.execute(get_answer_count_sql, {'gyik_id' : question[2]})
-        counts = c.fetchone()
-
-        # Handling output:
-        if counts[1] is None:
-            print(f'Question ID: {question[2]} is new!')
-            # Ingest_logic
-        elif counts[0] == question[1]:
-            print(f'Question ID: {question[2]} already ingested. Nothing to do.')
-            # Continue
-        else:
-            print(f'Question ({question[2]}) is already ingested but new answers arrived ({counts[0]} vs {question[1]})!')
-            # Delete logic
-            # Ingest logic
-        """
-
-        # Looping through URLs:
-        for URL in URL_list:
-            # Testing if question is loaded into the database:
-            match = re.search("__(\d+)-", URL)
-            if self.test_question(match[1]):
-                logging.warning(f"Question is already in the database: {URL}")
+        # Looping through the list of URLs:
+        for question_url, gyik_id, answer_count in question_list:
+            # 1. Get counts from database:
+            answer_count_db = self.db_handler.get_answer_count(gyik_id)
+            # 2. The question is new, scrape question:
+            if answer_count_db is None:
+                self.scrape_question(question_url)
+            # 3. The question has the same number of answer as what we have in the database:
+            elif answer_count_db == answer_count:
+                logging.warning(f"Question is already in the database: {question_url}")
                 continue
-
-            # Fetching question based on question URL:
-            rq = parse_full_question.retrieve_question(URL)
-            data = rq.get_data()
-
-            # Load data:
-            self.ql.add_question(data)
-
-    def test_answer_count(self, GYIK_ID: int) -> Tuple[int, int]:
-        """Get the number of answers for a given question based on GYIK_ID.
-
-        Args:
-            GYIK_ID int: GYIK identifier of a question
-
-        return:
-            Tuple where first element is the number of answers the second is the gyik id
-        """
-        return self.ad_obj.get_answer_count(GYIK_ID)
+            # Although the question is in the database the number of answers is different:
+            else:
+                logging.info(
+                    f"Question ({gyik_id}) is already ingested but new answers arrived ({answer_count} vs {answer_count_db})!"
+                )
+                # 4. Drop question from database:
+                self.db_handler.drop_question(gyik_id)
+                # 5. Ingesting the question again:
+                self.scrape_question(question_url)
 
 
 def __main__(
@@ -120,12 +106,12 @@ def __main__(
     """
     # Open database, create connection, initialize loader object:
     database_connection = db_connection(database_file)  # DB connection
-    scraper_object = scraper(database_connection)
+    scraper_object = GyikScraper(database_connection)
 
     # Only one page is parsed if direct question is passed:
     if direct_question:
         logging.info(f"Fetching single question: {direct_question}")
-        scraper_object.get_all_questions([direct_question])
+        scraper_object.scrape_question(direct_question)
         sys.exit()
 
     logging.info("Fetching data started...")
@@ -142,10 +128,10 @@ def __main__(
         soup = download_page.download_page(question_list_page_url)
 
         # Get URLs for all questions:
-        questions = scraper_object.get_all_questions(soup)
+        questions = get_all_questions(soup)
 
         # Retrieve all question data:
-        scraper_object.get_all_questions(questions)
+        scraper_object.scrape_question_list(questions)
 
         logging.info(f"page completed: {question_list_page_url}")
 

@@ -1,31 +1,43 @@
+"""Logic parsing questions from html."""
+
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 
 from scraper import parser_helper
 
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup, Tag
 
-class parse_answers:
-    def __init__(self, soup):
+
+class ParseAnswers:
+    """Answer parsing class."""
+
+    DEFAULT_USER = "kerdezo_dummy_user"
+
+    def __init__(self: ParseAnswers, soup: BeautifulSoup) -> None:
+        """Parse all answer related data.
+
+        Args:
+            self (ParseAnswers)
+            soup (BeautifulSoup): html data
         """
-        This class parses all answer related data.
-
-        :param soup: BeautifulSoup object
-        """
-
         self.soup = soup
         self.answer_data = []
 
         # Looping through the table and parse all questions:
         for answer in self.soup.findAll(
-            "div", id=lambda x: x and x.startswith("valasz-")
+            "div", id=lambda x: x is not None and x.startswith("valasz-")
         ):
-            # Extract answer id:
+            # Extract answer id as string:
             answer_id = answer.get("id").split("-")[1]
 
             # Parsing user name if available:
             userName = self._parse_user(answer)
 
             # If the original poster submits a comment we don't expect usefulness values:
-            if userName == "kerdezo_dummy_user":
+            if userName == self.DEFAULT_USER:
                 (user_percent, answer_percent) = (None, None)
             else:
                 (user_percent, answer_percent) = self._parse_usefulness(answer)
@@ -55,8 +67,20 @@ class parse_answers:
         self.next_page = self.find_next_page()
 
     @staticmethod
-    def _parse_text(row, answer_id):
+    def _parse_text(row: Tag, answer_id: str) -> str:
+        """Extract answer text.
+
+        Args:
+            row (BeautifulSoup): one row in the table extracted as div.
+            answer_id: gyik identifier of the answer
+
+        Returns:
+            str representation of the answer text.
+        """
         answer_body = row.find("div", id=f"valasz{answer_id}")
+
+        if answer_body is None:
+            return ""
 
         # Looping through all divs and delete them:
         for div in answer_body.findAll("div"):
@@ -75,7 +99,7 @@ class parse_answers:
             user_usefullness = 0
             for star in stars.findAll("img"):
                 link = star.get("src")
-                match = re.search("vsz(\d)\.png", link)
+                match = re.search(r"vsz(\d)\.png", link)
                 user_usefullness += 10 * int(match.group(1))
         except:
             user_usefullness = None
@@ -99,8 +123,9 @@ class parse_answers:
 
     @staticmethod
     def _parse_user(row):
+        # TODO: it's a static method, however the default user name is store in the class...
         header_text = row.find("div", class_=lambda x: x and x.endswith("_fejlec")).text
-        match = re.search("\d+/\d+(.+)válasza", header_text)
+        match = re.search(r"\d+/\d+(.+)válasza", header_text)
 
         try:
             user_name = match.group(1).strip()

@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 logger = logging.getLogger("__main__")
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
 
 
-def get_all_questions(soup: BeautifulSoup) -> list:
+def get_all_questions(soup: BeautifulSoup) -> List[tuple]:
     """Retrieve all question URLs on one list page.
 
     param:
