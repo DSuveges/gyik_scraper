@@ -296,6 +296,7 @@ class db_handler:
             gyik_id (str): Gyik identifier of the question
         """
         self.cursor.execute(self.delete_question_sql, {"gyik_id": gyik_id})
+        self.conn.commit()
 
     def add_question(self: db_handler, question_data: dict) -> int:
         """Add a new row to the question table.

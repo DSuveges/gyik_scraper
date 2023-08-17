@@ -79,8 +79,9 @@ class GyikScraper(object):
                 logging.info(
                     f"Question ({gyik_id}) is already ingested but new answers arrived ({answer_count} vs {answer_count_db})!"
                 )
-                # 4. Drop question from database:
-                self.db_handler.drop_question(gyik_id)
+                # TODO: fix deletion logic. However, strictly speaking, this is not needed. becauce the uniqueness of the Gyik id of the answer is also checket
+                # 4. Drop question from database: <- there's something problematic with the delete.
+                # self.db_handler.drop_question(gyik_id)
                 # 5. Ingesting the question again:
                 self.scrape_question(question_url)
 
