@@ -44,7 +44,7 @@ class db_handler:
     add_keyword_sql = """INSERT INTO KEYWORD(KEYWORD) VALUES(:keyword)"""
 
     # Look up question in the database based on the gyik id:
-    question_lookup_sql = """SELECT * FROM QUESTION WHERE GYIK_ID = :gyik_id"""
+    question_lookup_sql = """SELECT ID FROM QUESTION WHERE GYIK_ID = :gyik_id"""
 
     # Look up study in the database based on the gyik id:
     link_to_keyword_sql = """
@@ -251,23 +251,23 @@ class db_handler:
         # Return with the ID
         return ID
 
-    def test_question(self: db_handler, gyik_id: int) -> bool:
-        """Tests if question is already in the database by GYIK_ID.
+    def get_question_id(self: db_handler, gyik_id: int) -> int | None:
+        """Tests if question is already in the database by GYIK_ID if yes, returns question id.
 
         Args:
             self (db_handler)
             gyik_id (str): GYIK identifier of a question
         Returns:
-            bool: True if question is already in the database, False if not
+            int: question identifier if question is already in the database, None if not
         """
         # Fetch data from db:
         self.cursor.execute(self.question_lookup_sql, {"gyik_id": gyik_id})
 
         # The question is in the database:
-        if self.cursor.fetchone():
-            return True
-        else:
-            return False
+        try:
+            return self.cursor.fetchone()[0]
+        except TypeError:
+            return None
 
     def get_answer_count(self: db_handler, gyik_id: int) -> int | None:
         """Tests if question is already in the database by GYIK_ID.
@@ -469,8 +469,12 @@ class question_loader:
                 question_data["USER"]["USER"], question_data["USER"]["USER_PERCENT"]
             )
 
-        # 2. Add question
-        question_id = self.db_obj.add_question(question_data)
+        # 2. Add question only if the question is not in the database already:
+        question_id = (
+            self.db_obj.get_question_id(question_data["GYIK_ID"])
+            if self.db_obj.get_question_id(question_data["GYIK_ID"]) is not None
+            else self.db_obj.add_question(question_data)
+        )
 
         # Loop through all keywords:
         for keyword in question_data["KEYWORDS"]:

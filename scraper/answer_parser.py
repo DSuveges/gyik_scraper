@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import TYPE_CHECKING
 
@@ -9,6 +10,8 @@ from scraper import parser_helper
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup, Tag
+
+logger = logging.getLogger("__main__")
 
 
 class ParseAnswers:
@@ -50,6 +53,11 @@ class ParseAnswers:
 
             # Removing links:
             answer_text = answer_text.replace("[link]", "")
+
+            # If any field fails, won't load data into database:
+            if answer_date is None:
+                logger.warning(f"Problem with answer ({answer_id}). Skipping.")
+                continue
 
             # Build data structure:
             self.answer_data.append(
@@ -115,11 +123,14 @@ class ParseAnswers:
         return (user_usefullness, answer_usefullness)
 
     @staticmethod
-    def _parse_date(row):
-        footer = row.find("div", class_=lambda x: x and x.endswith("_statusz")).findAll(
-            "div"
-        )
-        return footer[0].text
+    def _parse_date(row: Tag) -> str | None:
+        try:
+            footer = row.find(
+                "div", class_=lambda x: x and x.endswith("_statusz")
+            ).findAll("div")
+            return footer[0].text
+        except AttributeError:
+            return None
 
     @staticmethod
     def _parse_user(row):

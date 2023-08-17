@@ -67,17 +67,20 @@ class GyikScraper(object):
         for question_url, answer_count, gyik_id in question_list:
             # 1. Get counts from database:
             answer_count_db = self.db_handler.get_answer_count(gyik_id)
+
             # 2. The question is new, scrape question:
             if answer_count_db is None:
                 self.scrape_question(question_url)
             # 3. The question has the same number of answer as what we have in the database:
             elif answer_count_db == answer_count:
-                logging.warning(f"Question is already in the database: {question_url}")
+                logging.warning(
+                    f"Question ({gyik_id}) ingested. Number of answers is the same ({answer_count_db})."
+                )
                 continue
             # Although the question is in the database the number of answers is different:
             else:
                 logging.info(
-                    f"Question ({gyik_id}) is already ingested but new answers arrived ({answer_count} vs {answer_count_db})!"
+                    f"Question ({gyik_id}) has new answers: {answer_count_db} -> {answer_count}"
                 )
                 # TODO: fix deletion logic. However, strictly speaking, this is not needed. becauce the uniqueness of the Gyik id of the answer is also checket
                 # 4. Drop question from database: <- there's something problematic with the delete.
