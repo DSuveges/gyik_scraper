@@ -1,30 +1,27 @@
-from scraper import download_page
-from scraper import question_parser
-from scraper import answer_parser
+from scraper import answer_parser, download_page, question_parser
+
 
 class retrieve_question(object):
-
     def __init__(self, URL):
         self.soup = self.fetch_url(URL)
         self.url = URL
 
         # Parse question data:
-        pq = question_parser.parse_question(self.soup, URL)
+        pq = question_parser.ParseQuestion(self.soup, URL)
 
         # Parsing question related information:
         self.question_document = pq.get_question_data()
 
         # if we know who asked the question:
-        self.user = self.question_document['USER']['USER']
+        self.user = self.question_document["USER"]["USER"]
 
         # Parsing answers:
-        self.question_document['ANSWERS'] = self.parse_answers()
+        self.question_document["ANSWERS"] = self.parse_answers()
 
     def get_data(self):
         return self.question_document
 
     def parse_answers(self, url=None):
-
         # if url is given, the url is fetch, otherwise we use the original html:
         if url:
             soup = self.fetch_url(url)
@@ -32,14 +29,14 @@ class retrieve_question(object):
             soup = self.soup
 
         # Parse answers:
-        pa = answer_parser.parse_answers(soup)
+        pa = answer_parser.ParseAnswers(soup)
         answers = pa.get_answer_data()
 
         # if we know who asked the question update with the name:
         if self.user:
             for answer in answers:
-                if answer['USER']['USER'] == 'kerdezo_dummy_user':
-                    answer['USER']['USER'] = self.user
+                if answer["USER"]["USER"] == "kerdezo_dummy_user":
+                    answer["USER"]["USER"] = self.user
 
         # If there's a next page, go there:
         if pa.get_next_page():

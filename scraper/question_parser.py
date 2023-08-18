@@ -1,16 +1,28 @@
-# from bs4 import BeautifulSoup, UnicodeDammit
-from scraper import parser_helper
+"""Logic to parse question data."""
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 
-class parse_question(object):
+from scraper import parser_helper
 
-    def __init__(self, soup, question_URL):
-        """
-        This class parses all question related data.
-        The URL needs to be passed to have the GYIK ID of the question.
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup
 
-        :param soup: BeautifulSoup object
-        :param question_URL: URL of the question. (cannot be parsed from the html page)
+
+class ParseQuestion:
+    """A collection of methods to extract data from questions."""
+
+    # Default OP:
+    DEFAULT_USER = "kerdezo_dummy_user"
+
+    def __init__(self: ParseQuestion, soup: BeautifulSoup, question_URL: str) -> None:
+        """Initialize parser.
+
+        Args:
+            self (ParseQuestion)
+            soup (BeautifulSoup): object of the html page
+            question_URL (str): URL the html was downloaded from.
         """
         self.soup = soup
 
@@ -24,27 +36,27 @@ class parse_question(object):
         raw_date = self._parse_date()
         user = self._parse_user()
         text = self._parse_text()
-        ID_match = re.search('__(\d+?)-', question_URL)
+        ID_match = re.search(r"__(\d+?)-", question_URL)
 
         # Compile into some return value:
         self.question_data = {
-            'URL': question_URL,
-            'GYIK_ID': ID_match.group(1),
-            'TITLE': title,
-            'CATEGORY': categories[0],
-            'SUBCATEGORY': categories[1],
-            'QUESTION': text,
-            'QUESTION_DATE': parser_helper.process_date(raw_date),
-            'KEYWORDS': keywords,
-            'USER': {'USER': user, 'USER_PERCENT': None}
+            "URL": question_URL,
+            "GYIK_ID": ID_match.group(1),
+            "TITLE": title,
+            "CATEGORY": categories[0],
+            "SUBCATEGORY": categories[1],
+            "QUESTION": text,
+            "QUESTION_DATE": parser_helper.process_date(raw_date),
+            "KEYWORDS": keywords,
+            "USER": {"USER": user, "USER_PERCENT": None},
         }
 
     def _parse_title(self):
-        title = self.soup.find('div', class_='kerdes_fejlec').find('h1').text
+        title = self.soup.find("div", class_="kerdes_fejlec").find("h1").text
         return title
 
     def _parse_categories(self):
-        links = self.soup.find("div", class_="morzsamenu").findChildren('a')
+        links = self.soup.find("div", class_="morzsamenu").findChildren("a")
         category = links[1].text
         subcategory = links[2].text
 
@@ -54,15 +66,17 @@ class parse_question(object):
         keywords = []
         # Extracting keywords:
         try:
-            for kulcsszo in self.soup.find('div', class_ = 'kerdes_kulcsszo').findAll('a'):
-                keywords.append(kulcsszo.text.replace('#',''))
+            for kulcsszo in self.soup.find("div", class_="kerdes_kulcsszo").findAll(
+                "a"
+            ):
+                keywords.append(kulcsszo.text.replace("#", ""))
         except:
             return keywords
 
         return keywords
 
     def _parse_date(self):
-        q_date = self.soup.find('div', title='A kérdés kiírásának időpontja')
+        q_date = self.soup.find("div", title="A kérdés kiírásának időpontja")
 
         if q_date:
             return q_date.text
@@ -70,28 +84,26 @@ class parse_question(object):
             return None
 
     def _parse_user(self):
-        user = self.soup.find('div', class_='kerdes_fejlec')
-        if len(user.findAll('div')) > 0:
-            user_text = user.find('div').text
-            return user_text.replace(' kérdése:', '')
+        user = self.soup.find("div", class_="kerdes_fejlec")
+        if len(user.findAll("div")) > 0:
+            user_text = user.find("div").text
+            return user_text.replace(" kérdése:", "")
         else:
-            return None
+            return self.DEFAULT_USER
 
     def _parse_text(self):
-        kerdes_body = self.soup.find('div', class_='kerdes_kerdes')
+        kerdes_body = self.soup.find("div", class_="kerdes_kerdes")
 
         # Removing unwanted divs:
-        for div in kerdes_body.findAll('div'):
+        for div in kerdes_body.findAll("div"):
             div.decompose()
 
         if kerdes_body.text:
-            text = kerdes_body.text.replace('\n', ' ')
+            text = kerdes_body.text.replace("\n", " ")
             return text
         else:
-            q_text = ' '.join([x.text for x in kerdes_body.findAll('p')])
+            q_text = " ".join([x.text for x in kerdes_body.findAll("p")])
             return q_text
 
     def get_question_data(self):
         return self.question_data
-
-    

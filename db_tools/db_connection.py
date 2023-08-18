@@ -1,12 +1,20 @@
-import sqlite3
-import os.path
+"""Toolset for the lowest level interaction with the database."""
+from __future__ import annotations
+
 import logging
+import os.path
+import sqlite3
+from typing import TYPE_CHECKING
 
-logger = logging.getLogger('__main__')
+if TYPE_CHECKING:
+    from sqlite3 import Connection
 
-class db_connection(object):
-    """
-    This class establishes the connection with the database. It also has the table definitions.
+logger = logging.getLogger("__main__")
+
+
+class db_connection:
+    """This class establishes the connection with the database. It also has the table definitions.
+
     If the requested db file does not exist, creates the database with the proper tables.
     """
 
@@ -49,7 +57,10 @@ class db_connection(object):
         USER_PERCENT NUMERIC,
         ANSWER_PERCENT NUMERIC,
         FOREIGN KEY (USER_ID) REFERENCES USER (ID),
-        FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)
+        CONSTRAINT QUESTION_ID
+            FOREIGN KEY (QUESTION_ID)
+            REFERENCES QUESTION (ID)
+            ON DELETE CASCADE
     )"""
 
     # Linking table making connection between questions and keywords:
@@ -57,53 +68,72 @@ class db_connection(object):
         KEYWORD_ID INTEGER NOT NULL,
         QUESTION_ID INTEGER NOT NULL,
         FOREIGN KEY (KEYWORD_ID) REFERENCES KEYWORD (ID),
-        FOREIGN KEY (QUESTION_ID) REFERENCES QUESTION (ID)
+        CONSTRAINT QUESTION_ID
+            FOREIGN KEY (QUESTION_ID)
+            REFERENCES QUESTION (ID)
+            ON DELETE CASCADE
     )"""
 
+    def __init__(self: db_connection, filename: str) -> None:
+        """Initialize a database connection.
 
-    def __init__(self, filename):
+        - Check if a file exists,
+        - Creates a connection to the file
+        - Creates all necessary tables if new db is created.
+
+        Args:
+            self (db_connection)
+            filename (str): Name of the file representing the database.
+        """
         # Check if file exists:
         if not os.path.isfile(filename):
             logger.info(f"{filename} could not be opened. DB is being created.")
 
         # Create connection:
-        self._create_connection(filename)
+        connection = self._create_connection(filename)
+        self.conn = connection
 
         # Create all tables:
         self._create_all_tables()
 
+    def _create_connection(self: db_connection, db_file: str) -> Connection:
+        """Create a database connection to the SQLite database specified by db_file.
 
-    def _create_connection(self, db_file):
-        """ create a database connection to the SQLite database
-            specified by db_file
-        :param db_file: database file
-        :return: Connection object or None
+        Args:
+            self (db_connection)
+            db_file (str): database file name
         """
         try:
-            self.conn = sqlite3.connect(db_file)
-        except:
+            return sqlite3.connect(db_file)
+        except ConnectionError:
             logger.error(f"[Error] DB could not be connected ({db_file}). Exiting")
-            raise ConnectionError(f"[Error] DB could not be connected ({db_file}). Exiting")
+            raise ConnectionError(
+                f"[Error] DB could not be connected ({db_file}). Exiting"
+            )
 
+    def _create_table(self: db_connection, create_table_sql: str) -> None:
+        """Create a table from the create_table_sql statement.
 
-    def _create_table(self, create_table_sql):
-        """ create a table from the create_table_sql statement
-        :param conn: Connection object
-        :param create_table_sql: a CREATE TABLE statement
-        :return:
+        Args:
+            self (db_connection)
+            create_table_sql (str): a CREATE TABLE statement
         """
         try:
             c = self.conn.cursor()
             c.execute(create_table_sql)
-        except:
-            logger.error('Table could not be created.')
-            raise ConnectionErrorn('Table could not be created.')
+        except ConnectionError:
+            logger.error("Table could not be created.")
+            raise ConnectionError("Table could not be created.")
 
+    def _create_all_tables(self: db_connection) -> None:
+        """Create ALL tables required by the database.
 
-    def _create_all_tables(self):
-        tables_to_create = ['keyword','user','question','answer','question_keyword']
+        Args:
+            self (db_connection)
+        """
+        tables_to_create = ["keyword", "user", "question", "answer", "question_keyword"]
 
         # create all tables
         for table in tables_to_create:
-            sql_statement = getattr(self, table+'_table_sql')
+            sql_statement = getattr(self, table + "_table_sql")
             self._create_table(sql_statement)
