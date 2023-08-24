@@ -22,8 +22,11 @@ def get_all_questions(soup: BeautifulSoup) -> List[tuple]:
         question_urls (list): all the links to questions.
     """
 
-    def _parse_count(count: Tag) -> int:
-        return int(count.text)
+    def _parse_count(count: Tag) -> int | None:
+        try:
+            return int(count.text)
+        except ValueError:
+            return None
 
     def _parse_link(question: Tag) -> str | None:
         url = question.find("a").get("href")
