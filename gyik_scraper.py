@@ -71,6 +71,11 @@ class GyikScraper(object):
             # 2. The question is new, scrape question:
             if answer_count_db is None:
                 self.scrape_question(question_url)
+            elif answer_count is None:
+                logging.warning(
+                    f"Question ({gyik_id}) already ingested, but could not get answer count. Skipping."
+                )
+                continue
             # 3. The question has the same number of answer as what we have in the database:
             elif answer_count_db == answer_count:
                 logging.warning(
