@@ -8,7 +8,7 @@ idna==3.7
 pycparser==2.19
 pyOpenSSL==19.1.0
 PySocks==1.7.1
-requests==2.31.0
+requests==2.32.0
 six==1.13.0
 soupsieve==1.9.5
 urllib3==1.26.18
